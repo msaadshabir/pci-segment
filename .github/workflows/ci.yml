@@ -43,15 +43,15 @@ jobs:
 
       - name: Validate example policies
         run: |
-          ./bin/pci-guard validate -f examples/policies/cde-isolation.yaml
-          ./bin/pci-guard validate -f examples/policies/cde-database.yaml
+          ./bin/pci-segment validate -f examples/policies/cde-isolation.yaml
+          ./bin/pci-segment validate -f examples/policies/cde-database.yaml
 
       - name: Test invalid policy detection
         run: |
-          ./bin/pci-guard validate -f examples/policies/invalid-policy.yaml && exit 1 || exit 0
+          ./bin/pci-segment validate -f examples/policies/invalid-policy.yaml && exit 1 || exit 0
 
       - name: Generate compliance report
-        run: ./bin/pci-guard report -f examples/policies/cde-isolation.yaml -o test-report.html
+        run: ./bin/pci-segment report -f examples/policies/cde-isolation.yaml -o test-report.html
 
   lint:
     name: Lint
@@ -103,19 +103,19 @@ jobs:
       - name: Build for multiple platforms
         run: |
           # Linux AMD64
-          GOOS=linux GOARCH=amd64 go build -o pci-guard-linux-amd64 .
+          GOOS=linux GOARCH=amd64 go build -o pci-segment-linux-amd64 .
 
           # Linux ARM64
-          GOOS=linux GOARCH=arm64 go build -o pci-guard-linux-arm64 .
+          GOOS=linux GOARCH=arm64 go build -o pci-segment-linux-arm64 .
 
           # macOS AMD64
-          GOOS=darwin GOARCH=amd64 go build -o pci-guard-darwin-amd64 .
+          GOOS=darwin GOARCH=amd64 go build -o pci-segment-darwin-amd64 .
 
           # macOS ARM64 (Apple Silicon)
-          GOOS=darwin GOARCH=arm64 go build -o pci-guard-darwin-arm64 .
+          GOOS=darwin GOARCH=arm64 go build -o pci-segment-darwin-arm64 .
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: pci-guard-binaries
-          path: pci-guard-*
+          name: pci-segment-binaries
+          path: pci-segment-*

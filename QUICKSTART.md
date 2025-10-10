@@ -1,6 +1,6 @@
-# Quick Start Guide - PCI-GUARD
+# Quick Start Guide - pci-segment
 
-Get up and running with PCI-GUARD in 5 minutes!
+Get up and running with pci-segment in 5 minutes!
 
 ## Installation
 
@@ -8,19 +8,19 @@ Get up and running with PCI-GUARD in 5 minutes!
 
 ```bash
 # macOS (Apple Silicon)
-curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-guard-darwin-arm64 -o pci-guard
-chmod +x pci-guard
-sudo mv pci-guard /usr/local/bin/
+curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-darwin-arm64 -o pci-segment
+chmod +x pci-segment
+sudo mv pci-segment /usr/local/bin/
 
 # macOS (Intel)
-curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-guard-darwin-amd64 -o pci-guard
-chmod +x pci-guard
-sudo mv pci-guard /usr/local/bin/
+curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-darwin-amd64 -o pci-segment
+chmod +x pci-segment
+sudo mv pci-segment /usr/local/bin/
 
 # Linux (x86_64)
-curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-guard-linux-amd64 -o pci-guard
-chmod +x pci-guard
-sudo mv pci-guard /usr/local/bin/
+curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-linux-amd64 -o pci-segment
+chmod +x pci-segment
+sudo mv pci-segment /usr/local/bin/
 ```
 
 ### Option 2: Build from Source
@@ -34,8 +34,8 @@ make build
 ## Verify Installation
 
 ```bash
-pci-guard --version
-# Output: pci-guard version 1.0.0
+pci-segment --version
+# Output: pci-segment version 1.0.0
 ```
 
 ## 5-Minute Tutorial
@@ -47,14 +47,14 @@ pci-guard --version
 curl -O https://raw.githubusercontent.com/saad-build/pci-segment/main/examples/policies/cde-isolation.yaml
 
 # Validate it
-pci-guard validate -f cde-isolation.yaml
+pci-segment validate -f cde-isolation.yaml
 ```
 
 **Expected Output:**
 
 ```
 [POLICY] cde-isolation
-   API Version: pci-guard/v1
+   API Version: pci-segment/v1
    Kind: NetworkPolicy
    PCI-DSS: [Req 1.2, Req 1.3]
    Status: [OK] VALID
@@ -67,7 +67,7 @@ pci-guard validate -f cde-isolation.yaml
 ```bash
 # Create a policy that violates PCI-DSS
 cat > bad-policy.yaml <<EOF
-apiVersion: pci-guard/v1
+apiVersion: pci-segment/v1
 kind: NetworkPolicy
 metadata:
   name: bad-policy
@@ -87,7 +87,7 @@ spec:
 EOF
 
 # Try to validate it
-pci-guard validate -f bad-policy.yaml
+pci-segment validate -f bad-policy.yaml
 ```
 
 **Expected Output:**
@@ -100,7 +100,7 @@ Error: validation failed: CDE policy cannot allow access from 0.0.0.0/0 (PCI-DSS
 
 ```bash
 # Generate HTML report
-pci-guard report -f cde-isolation.yaml -o my-report.html
+pci-segment report -f cde-isolation.yaml -o my-report.html
 
 # Open in browser
 open my-report.html  # macOS
@@ -112,7 +112,7 @@ xdg-open my-report.html  # Linux
 ```bash
 # Create a policy for your payment gateway
 cat > payment-gateway.yaml <<EOF
-apiVersion: pci-guard/v1
+apiVersion: pci-segment/v1
 kind: NetworkPolicy
 metadata:
   name: payment-gateway-policy
@@ -145,14 +145,14 @@ spec:
 EOF
 
 # Validate your policy
-pci-guard validate -f payment-gateway.yaml
+pci-segment validate -f payment-gateway.yaml
 ```
 
 ### Step 5: Enforce Policies (1 minute)
 
 ```bash
 # Start enforcement (requires sudo on macOS for pf)
-sudo pci-guard enforce -f payment-gateway.yaml
+sudo pci-segment enforce -f payment-gateway.yaml
 
 # The enforcer will generate firewall rules and start blocking
 # unauthorized traffic to your CDE
@@ -164,10 +164,10 @@ sudo pci-guard enforce -f payment-gateway.yaml
 
 ```bash
 # Generate report for all policies
-pci-guard report -f policies/*.yaml -o audit-report.html
+pci-segment report -f policies/*.yaml -o audit-report.html
 
 # Generate JSON for automation
-pci-guard report -f policies/*.yaml -o audit-data.json --format=json
+pci-segment report -f policies/*.yaml -o audit-data.json --format=json
 ```
 
 ### Use Case 2: CI/CD Integration
@@ -183,16 +183,16 @@ jobs:
       - uses: actions/checkout@v2
       - name: Validate PCI Policies
         run: |
-          curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-guard-linux-amd64 -o pci-guard
-          chmod +x pci-guard
-          ./pci-guard validate -f policies/*.yaml
+          curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-linux-amd64 -o pci-segment
+          chmod +x pci-segment
+          ./pci-segment validate -f policies/*.yaml
 ```
 
 ### Use Case 3: Development Testing
 
 ```bash
 # Validate policies on file change
-find policies/ -name "*.yaml" | entr pci-guard validate -f /_
+find policies/ -name "*.yaml" | entr pci-segment validate -f /_
 ```
 
 ## Troubleshooting
@@ -204,7 +204,7 @@ find policies/ -name "*.yaml" | entr pci-guard validate -f /_
 **Solution**: Check error messages for specific violations
 
 ```bash
-pci-guard validate -f your-policy.yaml -v
+pci-segment validate -f your-policy.yaml -v
 ```
 
 ### Error: "permission denied" (macOS)
@@ -214,7 +214,7 @@ pci-guard validate -f your-policy.yaml -v
 **Solution**: Use sudo
 
 ```bash
-sudo pci-guard enforce -f your-policy.yaml
+sudo pci-segment enforce -f your-policy.yaml
 ```
 
 ### Error: "failed to load policy"
@@ -256,26 +256,26 @@ yamllint your-policy.yaml
 
 ```bash
 # Validate policy
-pci-guard validate -f <policy.yaml>
+pci-segment validate -f <policy.yaml>
 
 # Enforce policies
-pci-guard enforce -f <policy.yaml>
+pci-segment enforce -f <policy.yaml>
 
 # Generate report
-pci-guard report -f <policy.yaml> -o <output.html>
+pci-segment report -f <policy.yaml> -o <output.html>
 
 # Show version
-pci-guard --version
+pci-segment --version
 
 # Get help
-pci-guard --help
-pci-guard <command> --help
+pci-segment --help
+pci-segment <command> --help
 ```
 
 ### Policy Template
 
 ```yaml
-apiVersion: pci-guard/v1
+apiVersion: pci-segment/v1
 kind: NetworkPolicy
 metadata:
   name: my-policy
@@ -302,4 +302,4 @@ spec:
 
 ---
 
-**Ready to secure your CDE? Start with `pci-guard validate`!**
+**Ready to secure your CDE? Start with `pci-segment validate`!**

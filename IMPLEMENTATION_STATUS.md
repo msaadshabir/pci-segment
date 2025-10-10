@@ -96,8 +96,8 @@ type EBPFEnforcer struct {
 **Evidence:**
 
 ```bash
-$ ./bin/pci-guard report -f policy.yaml -o report.html
- Report generated with:
+$ ./bin/pci-segment report -f policy.yaml -o report.html
+[OK] Report generated with:
   - Compliance status badge
   - Statistics dashboard
   - Policy inventory
@@ -172,14 +172,14 @@ $ make test
 
 ## CLI Implementation vs Design Document
 
-| Command              | Design Doc | Implementation Status |
-| -------------------- | ---------- | --------------------- |
-| `pci-guard enforce`  | Required   | Done                  |
-| `pci-guard validate` | Required   | Done                  |
-| `pci-guard report`   | Required   | Done                  |
-| `--compliance` flag  | Required   | Done                  |
-| `--format` flag      | Required   | Done (html/json)      |
-| `-v/--verbose`       | Required   | Done                  |
+| Command                | Design Doc | Implementation Status |
+| ---------------------- | ---------- | --------------------- |
+| `pci-segment enforce`  | Required   | Done                  |
+| `pci-segment validate` | Required   | Done                  |
+| `pci-segment report`   | Required   | Done                  |
+| `--compliance` flag    | Required   | Done                  |
+| `--format` flag        | Required   | Done (html/json)      |
+| `-v/--verbose`         | Required   | Done                  |
 
 **All CLI commands from design document are fully implemented.**
 

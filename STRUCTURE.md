@@ -1,4 +1,4 @@
-# PCI-GUARD Project Structure
+# pci-segment Project Structure
 
 ```
 pci-segment/
@@ -10,27 +10,27 @@ pci-segment/
  go.mod                      # Go module definition
  go.sum                      # Go dependencies
  main.go                     # Application entry point
-‚
+ï¿½
  cmd/                        # CLI commands
-‚    root.go                # Root command & flags
-‚    enforce.go             # Enforce policies command
-‚    validate.go            # Validate policies command
-‚    report.go              # Generate reports command
-‚
+ï¿½    root.go                # Root command & flags
+ï¿½    enforce.go             # Enforce policies command
+ï¿½    validate.go            # Validate policies command
+ï¿½    report.go              # Generate reports command
+ï¿½
  pkg/                        # Core packages
-‚    policy/                # Policy engine
-‚   ‚    types.go           # Policy data structures
-‚   ‚    engine.go          # Policy parser & validator
-‚   ‚    engine_test.go     # Unit tests
-‚   ‚
-‚    enforcer/              # OS-level enforcement
-‚   ‚    enforcer.go        # Interface & factory
-‚   ‚    pf_darwin.go       # macOS pf implementation
-‚   ‚    ebpf_linux.go      # Linux eBPF implementation
-‚   ‚
-‚    reporter/              # Compliance reporting
-‚        reporter.go        # HTML/JSON/PDF generation
-‚
+ï¿½    policy/                # Policy engine
+ï¿½   ï¿½    types.go           # Policy data structures
+ï¿½   ï¿½    engine.go          # Policy parser & validator
+ï¿½   ï¿½    engine_test.go     # Unit tests
+ï¿½   ï¿½
+ï¿½    enforcer/              # OS-level enforcement
+ï¿½   ï¿½    enforcer.go        # Interface & factory
+ï¿½   ï¿½    pf_darwin.go       # macOS pf implementation
+ï¿½   ï¿½    ebpf_linux.go      # Linux eBPF implementation
+ï¿½   ï¿½
+ï¿½    reporter/              # Compliance reporting
+ï¿½        reporter.go        # HTML/JSON/PDF generation
+ï¿½
  examples/                   # Example policies & demos
      policies/              # Sample PCI-DSS policies
          cde-isolation.yaml      # CDE isolation policy
@@ -136,12 +136,12 @@ Intentionally violates PCI-DSS:
 
 ```
 bin/
- pci-guard           # Compiled binary
+ pci-segment         # Compiled binary
 
 Generated at runtime:
  compliance-report.html    # HTML report
  compliance-report.json    # JSON report
- /var/log/pci-guard.log   # Enforcement logs (future)
+ /var/log/pci-segment.log # Enforcement logs
 ```
 
 ## Testing Structure
@@ -149,9 +149,9 @@ Generated at runtime:
 ```
 pkg/
  policy/
-‚    engine_test.go      # Policy engine tests
+ï¿½    engine_test.go      # Policy engine tests
  enforcer/
-‚    enforcer_test.go    # Enforcer tests (future)
+ï¿½    enforcer_test.go    # Enforcer tests (future)
  reporter/
      reporter_test.go    # Reporter tests (future)
 ```
@@ -195,13 +195,13 @@ make clean        # Remove build artifacts
 ```
 pkg/
  cloud/                 # Cloud integrations
-‚    aws/              # AWS Security Groups
-‚    azure/            # Azure NSGs
-‚
+ï¿½    aws/              # AWS Security Groups
+ï¿½    azure/            # Azure NSGs
+ï¿½
  monitoring/           # Real-time monitoring
-‚    alerts.go         # Alert manager
-‚    metrics.go        # Prometheus metrics
-‚
+ï¿½    alerts.go         # Alert manager
+ï¿½    metrics.go        # Prometheus metrics
+ï¿½
  integrations/         # SIEM integrations
      splunk.go         # Splunk forwarder
      datadog.go        # Datadog agent

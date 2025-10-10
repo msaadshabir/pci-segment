@@ -1,9 +1,5 @@
 # pci-segment: PCI-DSS Microsegmentation Enforcer
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Go Version](https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go)](https://go.dev/)
-[![PCI-DSS](https://img.shields.io/badge/PCI--DSS-v4.0-green)](https://www.pcisecuritystandards.org/)
-
 > **Production-ready, open-source microsegmentation tool for PCI-DSS v4.0 compliance**
 
 pci-segment enforces **PCI-DSS Requirements 1.2 and 1.3** for network segmentation of the Cardholder Data Environment (CDE), providing fintech companies with a free, auditor-ready alternative to six-figure commercial solutions.
@@ -25,7 +21,7 @@ Financial institutions handling credit card data **must comply with PCI-DSS v4.0
 - **PCI-DSS v4.0 Compliant** - Pre-built policies for Req 1.2/1.3
 - **OS-Native Enforcement** - eBPF (Linux) and pf (macOS)
 - **Zero False Negatives** - Blocks 100% of unauthorized CDE access
-- **Auditor-Ready Reports** - HTML, JSON, and PDF (Phase 2)
+- **Auditor-Ready Reports** - HTML and JSON formats
 - **Single Binary Deployment** - No complex dependencies
 
 ### Compliance Features
@@ -362,25 +358,21 @@ Flags:
 
 ## Roadmap
 
-### Phase 1 (MVP) - Current
+### Implemented Features
 
 - [x] PCI-DSS policy engine
 - [x] eBPF/pf enforcement
 - [x] Compliance reporter (HTML/JSON)
 - [x] CLI interface
 
-### Phase 2 (Q3 2025)
+### Planned Features
 
 - [ ] AWS/Azure auto-remediation
-- [ ] Real-time monitoring + alerts
+- [ ] Real-time monitoring and alerts
 - [ ] Windows WFP support
 - [ ] PDF report generation
-
-### Phase 3 (Q1 2026)
-
 - [ ] Kubernetes Cilium integration
 - [ ] SOC2/GDPR policy templates
-- [ ] SaaS dashboard (commercial)
 - [ ] Threat intelligence integration
 
 ---
@@ -422,9 +414,9 @@ pci-segment solves a **$50k/year problem** for every payment-handling company wi
 - **Production-grade PCI-DSS compliance** out-of-the-box
 - **Auditor-ready evidence** for QSA review
 - **Zero licensing costs** (open-source MIT)
-- **Skills employers demand** (Go, eBPF, security, compliance)
+- **Enterprise-grade technology stack** (Go, eBPF, security, compliance)
 
-This isn't just a student project - it's a **viable open-source alternative** to commercial microsegmentation tools, built with the exact technologies fintech teams use.
+A viable open-source alternative to commercial microsegmentation tools, built with production-grade technologies.
 
 ---
 

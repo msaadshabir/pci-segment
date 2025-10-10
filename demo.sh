@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# PCI-GUARD Demo Script
-# This script demonstrates the key features of PCI-GUARD
+# pci-segment Demo Script
+# This script demonstrates the key features of pci-segment
 
 set -e
 
-BINARY="./pci-guard"
+BINARY="./pci-segment"
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 BLUE='\033[0;34m'
@@ -13,18 +13,18 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}===============================================================${NC}"
-echo -e "${BLUE}   [PCI-GUARD] Demo - PCI-DSS v4.0 Microsegmentation${NC}"
+echo -e "${BLUE}   [pci-segment] Demo - PCI-DSS v4.0 Microsegmentation${NC}"
 echo -e "${BLUE}===============================================================${NC}"
 echo ""
 
 # Check if binary exists
 if [ ! -f "$BINARY" ]; then
-    echo -e "${RED}Error: pci-guard binary not found${NC}"
+    echo -e "${RED}Error: pci-segment binary not found${NC}"
     echo "Run: make build"
     exit 1
 fi
 
-echo -e "${GREEN}[OK] PCI-GUARD binary found${NC}"
+echo -e "${GREEN}[OK] pci-segment binary found${NC}"
 echo ""
 
 # Demo 1: Show help

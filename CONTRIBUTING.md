@@ -1,6 +1,6 @@
-# Contributing to PCI-GUARD
+# Contributing to pci-segment
 
-Thank you for your interest in contributing to PCI-GUARD! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to pci-segment! This document provides guidelines and instructions for contributing.
 
 ## How to Contribute
 
@@ -137,7 +137,7 @@ func TestValidatePolicy(t *testing.T) {
         {
             name: "valid CDE policy",
             policy: Policy{
-                APIVersion: "pci-guard/v1",
+                APIVersion: "pci-segment/v1",
                 // ... policy details
             },
             expected: true,
@@ -230,4 +230,4 @@ By contributing, you agree that your contributions will be licensed under the MI
 
 ---
 
-Thank you for contributing to PCI-GUARD!
+Thank you for contributing to pci-segment!
