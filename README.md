@@ -403,7 +403,6 @@ MIT License See [LICENSE](LICENSE) for details.
 
 - **Issues**: [GitHub Issues](https://github.com/saad-build/pci-segment/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/saad-build/pci-segment/discussions)
-- **Email**: saad@example.com
 
 ---
 
