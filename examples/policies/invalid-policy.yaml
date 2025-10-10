@@ -1,0 +1,23 @@
+# Invalid Policy Example - For Testing
+# This policy violates PCI-DSS by allowing 0.0.0.0/0 access
+
+apiVersion: pci-segment/v1
+kind: NetworkPolicy
+metadata:
+  name: bad-cde-policy
+  annotations:
+    pci-dss: "Req 1.3"
+
+spec:
+  podSelector:
+    matchLabels:
+      pci-env: cde
+
+  # VIOLATION: Allows access from anywhere
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 0.0.0.0/0 # This violates PCI-DSS Req 1.3
+      ports:
+        - protocol: TCP
+          port: 443

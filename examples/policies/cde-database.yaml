@@ -1,0 +1,29 @@
+# Database Access Policy
+# Restricts access to CDE databases
+
+apiVersion: pci-segment/v1
+kind: NetworkPolicy
+metadata:
+  name: cde-database-access
+  annotations:
+    pci-dss: "Req 1.2, Req 1.3"
+    description: "Restrict database access to authorized application servers only"
+
+spec:
+  podSelector:
+    matchLabels:
+      pci-env: cde
+      tier: database
+
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.0.1.0/24 # Application server network
+      ports:
+        - protocol: TCP
+          port: 5432 # PostgreSQL
+        - protocol: TCP
+          port: 3306 # MySQL
+
+  # No egress = database cannot initiate outbound connections
+  egress: []

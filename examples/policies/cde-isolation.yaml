@@ -1,0 +1,44 @@
+# CDE Isolation Policy
+# PCI-DSS v4.0 Requirements 1.2 and 1.3
+#
+# This policy isolates the Cardholder Data Environment (CDE) from all
+# other systems, allowing only authorized payment processor communication.
+
+apiVersion: pci-segment/v1
+kind: NetworkPolicy
+metadata:
+  name: cde-isolation
+  annotations:
+    pci-dss: "Req 1.2, Req 1.3"
+    description: "Isolate CDE from non-CDE networks"
+  labels:
+    environment: production
+    compliance: pci-dss
+
+spec:
+  # Select all CDE workloads
+  podSelector:
+    matchLabels:
+      pci-env: cde
+
+  # Egress: CDE can only talk to payment processors
+  egress:
+    - to:
+        - ipBlock:
+            cidr: 10.0.10.0/24 # Payment processor IP range
+      ports:
+        - protocol: TCP
+          port: 443 # HTTPS only
+        - protocol: TCP
+          port: 8443
+
+  # Ingress: Only monitoring and authorized internal services
+  ingress:
+    - from:
+        - ipBlock:
+            cidr: 10.0.20.0/24 # Internal monitoring network
+      ports:
+        - protocol: TCP
+          port: 9090 # Monitoring port
+
+# Implicitly blocks ALL other traffic (default-deny per PCI Req 1.3)
