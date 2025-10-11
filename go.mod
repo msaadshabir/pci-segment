@@ -1,6 +1,6 @@
 module github.com/saad-build/pci-segment
 
-go 1.25.2
+go 1.23
 
 require (
 	github.com/spf13/cobra v1.10.1
