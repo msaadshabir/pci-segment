@@ -19,6 +19,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Clean Go modules cache
+        run: rm -rf ~/go/pkg/mod
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -62,6 +65,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Clean Go modules cache
+        run: rm -rf ~/go/pkg/mod
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
@@ -93,10 +99,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run Gosec Security Scanner
-        uses: securego/gosec@master
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
-          args: "./..."
+          go-version: "1.25.2"
+          check-latest: true
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.22.9
+
+      - name: Run gosec
+        run: $(go env GOPATH)/bin/gosec ./...
 
   build-release:
     name: Build Release Binaries
