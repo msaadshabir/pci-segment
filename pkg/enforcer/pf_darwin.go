@@ -1,3 +1,5 @@
+//go:build darwin
+
 package enforcer
 
 import (
@@ -19,7 +21,7 @@ type PFEnforcer struct {
 }
 
 // NewPFEnforcer creates a new pf-based enforcer for macOS
-func NewPFEnforcer() (*PFEnforcer, error) {
+func NewPFEnforcer() (Enforcer, error) {
 	return &PFEnforcer{
 		policies: make([]policy.Policy, 0),
 		events:   make([]policy.EnforcementEvent, 0),
