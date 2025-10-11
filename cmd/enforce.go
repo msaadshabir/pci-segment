@@ -26,7 +26,9 @@ func init() {
 	rootCmd.AddCommand(enforceCmd)
 	enforceCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file or glob pattern (required)")
 	enforceCmd.Flags().StringVar(&complianceMode, "compliance", "pci", "compliance mode (pci, soc2)")
-	enforceCmd.MarkFlagRequired("file")
+	if err := enforceCmd.MarkFlagRequired("file"); err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
+	}
 }
 
 func runEnforce(cmd *cobra.Command, args []string) error {

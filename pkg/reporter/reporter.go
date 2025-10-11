@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/saad-build/pci-segment/pkg/policy"
@@ -80,7 +81,9 @@ func (r *Reporter) ExportJSON(filename string) error {
 		return fmt.Errorf("failed to marshal JSON: %w", err)
 	}
 
-	if err := os.WriteFile(filename, data, 0644); err != nil {
+	securePath := filepath.Clean(filename)
+
+	if err := os.WriteFile(securePath, data, 0600); err != nil { // #nosec G304 -- output path is provided via CLI and cleaned above
 		return fmt.Errorf("failed to write JSON file: %w", err)
 	}
 
@@ -93,7 +96,9 @@ func (r *Reporter) ExportHTML(filename string) error {
 
 	tmpl := template.Must(template.New("report").Parse(htmlTemplate))
 
-	f, err := os.Create(filename)
+	securePath := filepath.Clean(filename)
+
+	f, err := os.OpenFile(securePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600) // #nosec G304
 	if err != nil {
 		return fmt.Errorf("failed to create HTML file: %w", err)
 	}

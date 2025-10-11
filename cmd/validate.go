@@ -19,7 +19,9 @@ var validateCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file to validate (required)")
-	validateCmd.MarkFlagRequired("file")
+	if err := validateCmd.MarkFlagRequired("file"); err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
+	}
 }
 
 func runValidate(cmd *cobra.Command, args []string) error {

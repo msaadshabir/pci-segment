@@ -28,7 +28,9 @@ func init() {
 	reportCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file(s) to include in report (required)")
 	reportCmd.Flags().StringVarP(&outputFile, "output", "o", "pci-compliance-report.html", "output file")
 	reportCmd.Flags().StringVar(&reportFormat, "format", "html", "report format (html, json)")
-	reportCmd.MarkFlagRequired("file")
+	if err := reportCmd.MarkFlagRequired("file"); err != nil {
+		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
+	}
 }
 
 func runReport(cmd *cobra.Command, args []string) error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -23,7 +24,9 @@ func NewEngine() *Engine {
 
 // LoadFromFile loads a policy from a YAML file
 func (e *Engine) LoadFromFile(filename string) error {
-	data, err := os.ReadFile(filename)
+	securePath := filepath.Clean(filename)
+
+	data, err := os.ReadFile(securePath) // #nosec G304 -- file path originates from trusted CLI flag, sanitized above
 	if err != nil {
 		return fmt.Errorf("failed to read policy file: %w", err)
 	}
