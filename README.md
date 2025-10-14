@@ -47,12 +47,12 @@ Financial institutions handling credit card data **must comply with PCI-DSS v4.0
 
 ```bash
 # macOS (Apple Silicon)
-curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-darwin-arm64 -o pci-segment
+curl -L https://github.com/msaadshabir/pci-segment/releases/latest/download/pci-segment-darwin-arm64 -o pci-segment
 chmod +x pci-segment
 sudo mv pci-segment /usr/local/bin/
 
 # Linux (x86_64)
-curl -L https://github.com/saad-build/pci-segment/releases/latest/download/pci-segment-linux-amd64 -o pci-segment
+curl -L https://github.com/msaadshabir/pci-segment/releases/latest/download/pci-segment-linux-amd64 -o pci-segment
 chmod +x pci-segment
 sudo mv pci-segment /usr/local/bin/
 ```
@@ -60,7 +60,7 @@ sudo mv pci-segment /usr/local/bin/
 ### Build from Source
 
 ```bash
-git clone https://github.com/saad-build/pci-segment.git
+git clone https://github.com/msaadshabir/pci-segment.git
 cd pci-segment
 go build -o pci-segment .
 ```
@@ -69,7 +69,7 @@ go build -o pci-segment .
 
 - **Linux**: Kernel >=4.18 (for eBPF support)
 - **macOS**: macOS 12+ (for pf support)
-- **Go**: 1.22+ (for building from source)
+- **Go**: 1.23+ (for building from source)
 
 ---
 
@@ -401,8 +401,8 @@ MIT License See [LICENSE](LICENSE) for details.
 
 ## Support
 
-- **Issues**: [GitHub Issues](https://github.com/saad-build/pci-segment/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/saad-build/pci-segment/discussions)
+- **Issues**: [GitHub Issues](https://github.com/msaadshabir/pci-segment/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/msaadshabir/pci-segment/discussions)
 
 ---
 

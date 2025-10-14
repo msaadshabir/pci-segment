@@ -51,7 +51,7 @@ All notable changes to pci-segment will be documented in this file.
 
 ### Technical Stack
 
-- **Language**: Go 1.22+
+- **Language**: Go 1.23+
 - **Enforcement**: eBPF (Linux), pf (macOS)
 - **CLI Framework**: Cobra
 - **Configuration**: YAML
@@ -62,6 +62,6 @@ All notable changes to pci-segment will be documented in this file.
 ### Project Metadata
 
 - **License**: MIT
-- **Repository**: https://github.com/saad-build/pci-segment
+- **Repository**: https://github.com/msaadshabir/pci-segment
 - **Binary Name**: `pci-segment`
 - **API Version**: `pci-segment/v1`

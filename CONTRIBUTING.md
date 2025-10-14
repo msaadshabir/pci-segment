@@ -16,7 +16,7 @@ Thank you for your interest in contributing to pci-segment! This document provid
 1. **Fork the repository**
 
    ```bash
-   git clone https://github.com/saad-build/pci-segment.git
+   git clone https://github.com/msaadshabir/pci-segment.git
    cd pci-segment
    ```
 
@@ -66,7 +66,7 @@ Thank you for your interest in contributing to pci-segment! This document provid
 
 ### Prerequisites
 
-- Go 1.22 or higher
+- Go 1.23 or higher
 - Make
 - Git
 
@@ -74,7 +74,7 @@ Thank you for your interest in contributing to pci-segment! This document provid
 
 ```bash
 # Clone the repository
-git clone https://github.com/saad-build/pci-segment.git
+git clone https://github.com/msaadshabir/pci-segment.git
 cd pci-segment
 
 # Install dependencies
