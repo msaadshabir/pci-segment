@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/saad-build/pci-segment/cmd"
+	"github.com/msaadshabir/pci-segment/cmd"
 )
 
 func main() {

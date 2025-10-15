@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 // AWSIntegrator implements CloudIntegrator for AWS
@@ -281,10 +281,15 @@ func (a *AWSIntegrator) buildIngressPermissions(rules []policy.Rule) []types.IpP
 
 	for _, rule := range rules {
 		for _, port := range rule.Ports {
+			// Validate port range to prevent integer overflow
+			if port.Port < 0 || port.Port > 65535 {
+				continue // Skip invalid ports
+			}
+
 			perm := types.IpPermission{
 				IpProtocol: aws.String(strings.ToLower(port.Protocol)),
-				FromPort:   aws.Int32(int32(port.Port)),
-				ToPort:     aws.Int32(int32(port.Port)),
+				FromPort:   aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
+				ToPort:     aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
 			}
 
 			// Add CIDR blocks from rule
@@ -312,10 +317,15 @@ func (a *AWSIntegrator) buildEgressPermissions(rules []policy.Rule) []types.IpPe
 
 	for _, rule := range rules {
 		for _, port := range rule.Ports {
+			// Validate port range to prevent integer overflow
+			if port.Port < 0 || port.Port > 65535 {
+				continue // Skip invalid ports
+			}
+
 			perm := types.IpPermission{
 				IpProtocol: aws.String(strings.ToLower(port.Protocol)),
-				FromPort:   aws.Int32(int32(port.Port)),
-				ToPort:     aws.Int32(int32(port.Port)),
+				FromPort:   aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
+				ToPort:     aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
 			}
 
 			// Add CIDR blocks from rule

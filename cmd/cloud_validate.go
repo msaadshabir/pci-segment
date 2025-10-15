@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/saad-build/pci-segment/pkg/cloud"
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/cloud"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 )
 

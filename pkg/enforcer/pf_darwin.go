@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 // PFEnforcer implements enforcement using macOS pf (packet filter)

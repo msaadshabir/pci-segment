@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
-	"github.com/saad-build/pci-segment/pkg/reporter"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/reporter"
 	"github.com/spf13/cobra"
 )
 

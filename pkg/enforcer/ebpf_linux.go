@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 // EBPFEnforcer implements enforcement using Linux eBPF

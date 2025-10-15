@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 )
 

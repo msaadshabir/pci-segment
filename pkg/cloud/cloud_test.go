@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 // TestNewIntegrator tests cloud integrator factory

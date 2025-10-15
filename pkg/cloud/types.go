@@ -4,7 +4,7 @@ package cloud
 import (
 	"time"
 
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 // Provider represents a cloud provider type

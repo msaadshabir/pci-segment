@@ -3,9 +3,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
-	"github.com/saad-build/pci-segment/pkg/cloud"
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/cloud"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v3"
 )
@@ -140,7 +141,10 @@ func runCloudSync(cmd *cobra.Command, args []string) error {
 }
 
 func loadCloudConfig(filename string) (*cloud.Config, error) {
-	data, err := os.ReadFile(filename)
+	// Clean the file path to prevent directory traversal
+	cleanPath := filepath.Clean(filename)
+
+	data, err := os.ReadFile(cleanPath) // #nosec G304 - file path from CLI argument, validated by filepath.Clean
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}

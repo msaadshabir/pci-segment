@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/saad-build/pci-segment/pkg/enforcer"
-	"github.com/saad-build/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/enforcer"
+	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 )
 

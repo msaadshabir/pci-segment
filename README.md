@@ -420,7 +420,7 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ### Development Setup
 
 ```bash
-git clone https://github.com/saad-build/pci-segment.git
+git clone https://github.com/msaadshabir/pci-segment.git
 cd pci-segment
 go mod download
 go build -o pci-segment .
