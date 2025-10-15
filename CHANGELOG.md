@@ -2,6 +2,23 @@
 
 All notable changes to pci-segment will be documented in this file.
 
+## [Unreleased]
+
+### Added
+
+- **Cloud Integration**
+  - AWS Security Group synchronization with auto-remediation
+  - Azure Network Security Group (NSG) synchronization
+  - Cloud resource validation and drift detection
+  - `pci-segment cloud-sync` command with dry-run support
+  - `pci-segment cloud-validate` command with text/JSON output
+  - Multi-cloud support (AWS and Azure)
+  - Automatic tagging for managed resources
+  - Cloud configuration via YAML files
+  - Example configurations for AWS and Azure
+  - Comprehensive cloud integration documentation
+  - Test coverage for cloud provider implementations
+
 ## [1.0.0] - Current Release
 
 ### Implemented Features
@@ -41,13 +58,14 @@ All notable changes to pci-segment will be documented in this file.
 
 ### Planned Features
 
-- AWS/Azure cloud integration for Security Group synchronization
 - Real-time monitoring and alerting system
 - Windows WFP (Windows Filtering Platform) support
 - PDF report generation
 - Kubernetes Cilium integration
 - SOC2/GDPR policy templates
 - Threat intelligence integration
+- Multi-region cloud deployment
+- GCP Cloud Firewall support
 
 ### Technical Stack
 

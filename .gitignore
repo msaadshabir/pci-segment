@@ -45,3 +45,6 @@ temp/
 # Environment
 .env
 .env.local
+
+# AI instructions (development only)
+AI_INSTRUCTIONS.md

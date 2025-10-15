@@ -1,0 +1,26 @@
+# Azure Cloud Configuration for pci-segment
+
+provider: azure
+region: eastus
+dry_run: false # Set to true to preview changes without applying
+
+# Optional: Custom tags to apply to all resources
+tags:
+  Environment: production
+  ManagedBy: pci-segment
+  CostCenter: security
+
+# Azure-specific configuration
+azure:
+  # Required: Azure subscription ID
+  subscription_id: 00000000-0000-0000-0000-000000000000
+
+  # Required for service principal authentication
+  tenant_id: 00000000-0000-0000-0000-000000000000
+  client_id: 00000000-0000-0000-0000-000000000000
+  client_secret: your-client-secret-here
+
+  # Resource groups where NSGs should be created/managed
+  resource_groups:
+    - pci-cde-rg
+    - pci-production-rg

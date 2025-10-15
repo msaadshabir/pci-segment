@@ -1,0 +1,26 @@
+# AWS Cloud Configuration for pci-segment
+
+provider: aws
+region: us-east-1
+dry_run: false # Set to true to preview changes without applying
+
+# Optional: Custom tags to apply to all resources
+tags:
+  Environment: production
+  ManagedBy: pci-segment
+  CostCenter: security
+
+# AWS-specific configuration
+aws:
+  # Option 1: Use AWS profile (recommended for local development)
+  profile: default
+
+  # Option 2: Use explicit credentials (not recommended - use IAM roles or env vars instead)
+  # access_key_id: AKIAIOSFODNN7EXAMPLE
+  # secret_access_key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+  # VPC IDs where security groups should be created
+  # Leave empty to use the default VPC
+  vpc_ids:
+    - vpc-0123456789abcdef0
+    # - vpc-0fedcba9876543210

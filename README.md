@@ -20,6 +20,7 @@ Financial institutions handling credit card data **must comply with PCI-DSS v4.0
 
 - **PCI-DSS v4.0 Compliant** - Pre-built policies for Req 1.2/1.3
 - **OS-Native Enforcement** - eBPF (Linux) and pf (macOS)
+- **Cloud Integration** - Sync policies to AWS Security Groups and Azure NSGs
 - **Zero False Negatives** - Blocks 100% of unauthorized CDE access
 - **Auditor-Ready Reports** - HTML and JSON formats
 - **Single Binary Deployment** - No complex dependencies
@@ -31,13 +32,15 @@ Financial institutions handling credit card data **must comply with PCI-DSS v4.0
 - Wildcard access detection (blocks `0.0.0.0/0` to CDE)
 - Enforcement event logging for audit trails
 - Executive summary reports for QSAs
+- Cloud resource compliance validation
 
-### Advanced Features (Roadmap)
+### Cloud Auto-Remediation
 
-- Cloud integration (AWS Security Groups, Azure NSGs)
-- Real-time monitoring and alerting
-- Kubernetes NetworkPolicy generation
-- SIEM integration (Splunk, Datadog)
+- **AWS**: Automatic Security Group creation/updates
+- **Azure**: Network Security Group synchronization
+- **Drift Detection**: Identify non-compliant cloud resources
+- **Dry Run Mode**: Preview changes before applying
+- **Multi-Cloud**: Consistent policies across AWS and Azure
 
 ---
 
@@ -291,10 +294,12 @@ curl http://10.0.1.100:443  # Should be ALLOWED
 pci-segment [command] [flags]
 
 Commands:
-  enforce     Enforce PCI-DSS network policies
-  validate    Validate policies against PCI-DSS
-  report      Generate compliance reports
-  version     Show version information
+  enforce       Enforce PCI-DSS network policies
+  validate      Validate policies against PCI-DSS
+  report        Generate compliance reports
+  cloud-sync    Sync policies to cloud security groups
+  cloud-validate Validate cloud resources against policies
+  version       Show version information
 
 Flags:
   -f, --file string      Policy file or glob pattern
@@ -325,6 +330,34 @@ pci-segment report -f <policy-file> -o <output-file> [--format=html]
 
 Flags:
   --format string   Report format (html, json) (default "html")
+```
+
+### Cloud Sync
+
+```bash
+pci-segment cloud-sync -f <policy-file> -c <cloud-config> [--dry-run]
+
+Flags:
+  -c, --cloud-config string   Cloud configuration file (required)
+  --dry-run                   Preview changes without applying
+
+# Example: Sync policies to AWS Security Groups
+pci-segment cloud-sync -f examples/policies/*.yaml -c aws-config.yaml --dry-run
+```
+
+See [Cloud Integration Guide](examples/cloud/README.md) for setup instructions.
+
+### Cloud Validate
+
+```bash
+pci-segment cloud-validate -f <policy-file> -c <cloud-config> [--format=text]
+
+Flags:
+  -c, --cloud-config string   Cloud configuration file (required)
+  --format string             Output format (text, json) (default "text")
+
+# Example: Validate Azure NSGs against policies
+pci-segment cloud-validate -f examples/policies/*.yaml -c azure-config.yaml --format=json
 ```
 
 ---
@@ -364,16 +397,19 @@ Flags:
 - [x] eBPF/pf enforcement
 - [x] Compliance reporter (HTML/JSON)
 - [x] CLI interface
+- [x] AWS/Azure cloud integration (Security Groups/NSGs)
+- [x] Cloud validation and drift detection
 
 ### Planned Features
 
-- [ ] AWS/Azure auto-remediation
 - [ ] Real-time monitoring and alerts
 - [ ] Windows WFP support
 - [ ] PDF report generation
 - [ ] Kubernetes Cilium integration
 - [ ] SOC2/GDPR policy templates
 - [ ] Threat intelligence integration
+- [ ] Multi-region cloud deployment
+- [ ] GCP Cloud Firewall support
 
 ---
 
