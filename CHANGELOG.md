@@ -6,7 +6,7 @@ All notable changes to pci-segment will be documented in this file.
 
 ### Added
 
-- **Cloud Integration**
+- **Cloud Integration** (Production-Ready)
   - AWS Security Group synchronization with auto-remediation
   - Azure Network Security Group (NSG) synchronization
   - Cloud resource validation and drift detection
@@ -18,6 +18,31 @@ All notable changes to pci-segment will be documented in this file.
   - Example configurations for AWS and Azure
   - Comprehensive cloud integration documentation
   - Test coverage for cloud provider implementations
+
+### Documentation
+
+- **Updated Roadmap** - Added detailed production readiness assessment
+  - Phase 1: Critical security features (eBPF, audit logging, hardening)
+  - Phase 2: Enterprise features (monitoring, HA)
+  - Phase 3: Additional platforms (Windows, GCP, Kubernetes)
+  - Phase 4: Enhanced compliance (SOC2, GDPR, SIEM)
+- **Enhanced Limitations Section** - Transparent about current gaps
+  - eBPF enforcement is skeleton-only (not production-ready)
+  - Audit logging needs persistent storage
+  - No real-time monitoring yet
+- **Created ROADMAP.md** - Detailed 12-week implementation plan
+
+### Known Issues
+
+- **Linux eBPF Enforcement**: Skeleton implementation only, does not block traffic
+  - Use cloud integration for production deployments
+  - Full implementation planned for Phase 1 (4 weeks)
+- **Audit Logging**: Events stored in memory only, not persistent
+  - Not compliant with PCI-DSS Req 10.2
+  - Persistent storage planned for Phase 1 (1 week)
+- **No Monitoring**: No Prometheus metrics or alerting
+  - Manual compliance checks only
+  - Planned for Phase 2 (2 weeks)
 
 ## [1.0.0] - Current Release
 

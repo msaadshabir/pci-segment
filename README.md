@@ -381,35 +381,115 @@ pci-segment cloud-validate -f examples/policies/*.yaml -c azure-config.yaml --fo
 | **CDE Label Spoofing**  | Validate labels via trusted inventory      |
 | **Enforcer Compromise** | Run as unprivileged user; minimal syscalls |
 
-### Limitations
+### Current Limitations
 
-- **macOS**: Requires `sudo` for pf (dev/testing only)
+#### Production Readiness
+
+- **Linux eBPF Enforcement**: Skeleton implementation only - does not actually block traffic
+  - Use cloud integration (AWS/Azure) for production deployments
+  - Full eBPF implementation planned for Phase 1
+- **Audit Logging**: Basic event structures exist but no persistent storage
+  - Not compliant with PCI-DSS Req 10.2 for audit trails
+  - Persistent logging planned for Phase 1
+- **Monitoring**: No real-time alerts or metrics export
+  - Manual compliance checks only
+  - Prometheus/Grafana integration planned for Phase 2
+
+#### Platform Support
+
+- **macOS pf**: Requires `sudo`, development/testing only (not for production)
+- **Windows**: WFP support planned for Phase 3
 - **Cloud**: Security Groups are stateful (vs. stateless policies)
-- **Windows**: WFP support planned for Phase 2
+  - Works correctly but behavior differs from traditional firewalls
+
+#### Deployment
+
+- **Single Instance**: No high availability or clustering support
+- **Manual Configuration**: No configuration management integration (etcd/Consul)
+- **No Load Balancing**: Single point of failure
+
+**Important**: For production PCI-DSS compliance, use the **cloud integration features** (AWS/Azure) which are production-ready. Do not rely on Linux host enforcement until eBPF implementation is completed.
 
 ---
 
 ## Roadmap
 
-### Implemented Features
+### Production-Ready Features
 
-- [x] PCI-DSS policy engine
-- [x] eBPF/pf enforcement
-- [x] Compliance reporter (HTML/JSON)
-- [x] CLI interface
-- [x] AWS/Azure cloud integration (Security Groups/NSGs)
-- [x] Cloud validation and drift detection
+- [x] **PCI-DSS policy engine** - Validate policies against Req 1.2/1.3
+- [x] **AWS/Azure cloud integration** - Security Groups/NSGs sync and validation
+- [x] **Cloud drift detection** - Identify non-compliant resources
+- [x] **Compliance reporter** - HTML/JSON audit-ready reports
+- [x] **CLI interface** - Full-featured command-line tool
+- [x] **Policy validation** - Wildcard detection and CDE labeling checks
 
-### Planned Features
+### In Development (Critical for Production)
 
-- [ ] Real-time monitoring and alerts
-- [ ] Windows WFP support
-- [ ] PDF report generation
-- [ ] Kubernetes Cilium integration
-- [ ] SOC2/GDPR policy templates
-- [ ] Threat intelligence integration
-- [ ] Multi-region cloud deployment
-- [ ] GCP Cloud Firewall support
+#### Phase 1: Core Security (Weeks 1-4)
+
+- [ ] **Complete eBPF implementation** - Actual packet filtering on Linux
+  - [ ] BPF program in C for XDP/TC-BPF
+  - [ ] Map-based rule storage
+  - [ ] Real packet drop enforcement
+  - [ ] Integration tests with live traffic
+- [ ] **Persistent audit logging** - Tamper-proof event storage
+  - [ ] Write to `/var/log/pci-segment/audit.log`
+  - [ ] JSON format for SIEM ingestion
+  - [ ] Log rotation and retention policies
+  - [ ] File integrity monitoring
+- [ ] **Security hardening** - Production security controls
+  - [ ] Run as non-root user (drop privileges)
+  - [ ] SELinux/AppArmor profiles
+  - [ ] Input validation and rate limiting
+  - [ ] Secure credential storage
+
+#### Phase 2: Enterprise Features (Weeks 5-8)
+
+- [ ] **Real-time monitoring** - Observability and alerting
+  - [ ] Prometheus metrics export
+  - [ ] Grafana dashboard templates
+  - [ ] Alert rules for PCI violations
+  - [ ] Health check endpoints
+- [ ] **High availability** - Enterprise deployment
+  - [ ] Configuration management (etcd/Consul)
+  - [ ] Leader election for active-passive HA
+  - [ ] Backup and restore procedures
+  - [ ] Disaster recovery documentation
+- [ ] **Testing & validation** - Quality assurance
+  - [ ] Load testing with production traffic
+  - [ ] Performance benchmarks (10Gbps+)
+  - [ ] Security audit and pen testing
+  - [ ] QSA review of compliance features
+
+#### Phase 3: Additional Platforms (Weeks 9-12)
+
+- [ ] **Windows WFP support** - Windows Filtering Platform
+- [ ] **GCP Cloud Firewall** - Google Cloud integration
+- [ ] **Multi-region deployment** - Cross-region cloud sync
+  - [ ] Kubernetes integration\*\* - NetworkPolicy generation + Cilium
+
+#### Phase 4: Enhanced Compliance (Future)
+
+- [ ] **PDF report generation** - Professional audit reports
+- [ ] **SOC2/GDPR templates** - Additional compliance frameworks
+- [ ] **Threat intelligence** - Integration with threat feeds
+- [ ] **SIEM integration** - Splunk, Datadog, ELK connectors
+- [ ] **Change approval workflow** - Policy change management
+  - [ ] Automated remediation\*\* - Self-healing compliance
+
+### Current Maturity Level
+
+| Feature Category              | Status   | Production Ready              |
+| ----------------------------- | -------- | ----------------------------- |
+| Cloud Integration (AWS/Azure) | Complete | **YES** - Use today           |
+| Policy Validation             | Complete | **YES** - Use today           |
+| Compliance Reporting          | Complete | **YES** - Use today           |
+| Linux eBPF Enforcement        | Skeleton | **NO** - Needs implementation |
+| Audit Logging                 | Basic    | **NO** - Needs enhancement    |
+| Monitoring/Alerts             | Missing  | **NO** - Not implemented      |
+| High Availability             | Missing  | **NO** - Not implemented      |
+
+**Recommendation**: Use cloud features in production now. Complete Phase 1 before deploying host-based enforcement in regulated environments.
 
 ---
 
