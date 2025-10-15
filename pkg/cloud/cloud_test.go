@@ -1,5 +1,4 @@
 package cloud
-package cloud
 
 import (
 	"testing"
