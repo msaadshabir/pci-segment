@@ -28,8 +28,6 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 1.1 Complete eBPF Implementation (Priority: CRITICAL)
 
-**Effort**: 2-3 weeks | **Assignee**: TBD
-
 #### Current State
 
 - Skeleton implementation exists (`pkg/enforcer/ebpf_linux.go`)
