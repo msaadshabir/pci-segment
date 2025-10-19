@@ -1,28 +1,26 @@
 # pci-segment Development Roadmap
 
-> **Last Updated**: October 15, 2025
-
 ## Executive Summary
 
 pci-segment is **partially production-ready**. The cloud integration features (AWS/Azure) are production-grade and can be deployed today. However, the Linux eBPF host-based enforcement is incomplete and requires additional development before use in regulated environments.
 
 ### Production Readiness Status
 
-| Component                     | Status   | Production Ready | Timeline          |
-| ----------------------------- | -------- | ---------------- | ----------------- |
-| Cloud Integration (AWS/Azure) | Complete | **YES**          | Ready now         |
-| Policy Validation Engine      | Complete | **YES**          | Ready now         |
-| Compliance Reporting          | Complete | **YES**          | Ready now         |
-| CLI & Documentation           | Complete | **YES**          | Ready now         |
-| Linux eBPF Enforcement        | Skeleton | **NO**           | Phase 1 (4 weeks) |
-| Audit Logging                 | Basic    | **NO**           | Phase 1 (1 week)  |
-| Real-time Monitoring          | Missing  | **NO**           | Phase 2 (2 weeks) |
-| High Availability             | Missing  | **NO**           | Phase 2 (2 weeks) |
-| Windows Support               | Missing  | **NO**           | Phase 3 (4 weeks) |
+| Component                     | Status   | Production Ready | Priority |
+| ----------------------------- | -------- | ---------------- | -------- |
+| Cloud Integration (AWS/Azure) | Complete | **YES**          | -        |
+| Policy Validation Engine      | Complete | **YES**          | -        |
+| Compliance Reporting          | Complete | **YES**          | -        |
+| CLI & Documentation           | Complete | **YES**          | -        |
+| Linux eBPF Enforcement        | Skeleton | **NO**           | Phase 1  |
+| Audit Logging                 | Basic    | **NO**           | Phase 1  |
+| Real-time Monitoring          | Missing  | **NO**           | Phase 2  |
+| High Availability             | Missing  | **NO**           | Phase 2  |
+| Windows Support               | Missing  | **NO**           | Phase 3  |
 
 ---
 
-## Phase 1: Critical Production Features (Weeks 1-4)
+## Phase 1: Critical Production Features
 
 **Goal**: Make host-based enforcement production-ready for PCI-DSS compliance
 
@@ -36,7 +34,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 #### Required Work
 
-**Week 1-2: BPF Program Development**
+**BPF Program Development**
 
 - [ ] Write XDP/TC-BPF program in C
   - Packet parsing (Ethernet, IP, TCP/UDP)
@@ -53,7 +51,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
   - Attach to network interfaces
   - Populate maps from policies
 
-**Week 3: Integration & Testing**
+**Integration & Testing**
 
 - [ ] Integrate BPF with policy engine
   - Convert policies to BPF map entries
@@ -86,7 +84,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 1.2 Persistent Audit Logging (Priority: CRITICAL)
 
-**Effort**: 1 week | **Assignee**: TBD
+**Priority**: CRITICAL | **Assignee**: TBD
 
 #### Current State
 
@@ -109,19 +107,15 @@ pci-segment is **partially production-ready**. The cloud integration features (A
   - Compress rotated logs
 - [ ] Structured logging
   ```json
-  {
-    "timestamp": "2025-10-15T14:30:00Z",
-    "event_id": "uuid",
-    "source_ip": "10.0.1.100",
-    "dest_ip": "10.0.2.200",
-    "dest_port": 443,
-    "protocol": "tcp",
-    "action": "BLOCKED",
-    "policy_name": "cde-isolation",
-    "pci_dss_req": "Req 1.3",
-    "reason": "Not in allowed CIDR range"
-  }
+  #### Sample Log Format
   ```
+
+```json
+{
+  "event_id": "evt_20251015143000_abc123",
+  "timestamp": "2025-10-15T14:30:00Z",
+```
+
 - [ ] File integrity monitoring
   - SHA-256 checksum of log files
   - Store checksums in `/var/lib/pci-segment/checksums.db`
@@ -139,7 +133,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 1.3 Security Hardening (Priority: HIGH)
 
-**Effort**: 1 week | **Assignee**: TBD
+**Priority**: HIGH | **Assignee**: TBD
 
 #### Required Work
 
@@ -182,13 +176,13 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ---
 
-## Phase 2: Enterprise Features (Weeks 5-8)
+## Phase 2: Enterprise Features
 
 **Goal**: Production-grade observability and high availability
 
 ### 2.1 Real-time Monitoring (Priority: HIGH)
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: HIGH | **Assignee**: TBD
 
 #### Implementation
 
@@ -238,7 +232,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 2.2 High Availability (Priority: MEDIUM)
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: MEDIUM | **Assignee**: TBD
 
 #### Implementation
 
@@ -279,7 +273,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 2.3 Testing & Validation (Priority: HIGH)
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: HIGH | **Assignee**: TBD
 
 #### Test Coverage
 
@@ -320,13 +314,13 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ---
 
-## Phase 3: Additional Platforms (Weeks 9-12)
+## Phase 3: Additional Platforms
 
 **Goal**: Expand platform support
 
 ### 3.1 Windows WFP Support
 
-**Effort**: 3-4 weeks | **Assignee**: TBD
+**Priority**: MEDIUM | **Assignee**: TBD
 
 - [ ] Windows Filtering Platform integration
 - [ ] PowerShell installation scripts
@@ -336,7 +330,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 3.2 GCP Cloud Firewall
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: LOW | **Assignee**: TBD
 
 - [ ] GCP Firewall Rules API integration
 - [ ] Service account authentication
@@ -345,7 +339,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 3.3 Multi-Region Deployment
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: MEDIUM | **Assignee**: TBD
 
 - [ ] Cross-region policy sync
 - [ ] Regional failover
@@ -354,7 +348,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 3.4 Kubernetes Integration
 
-**Effort**: 2 weeks | **Assignee**: TBD
+**Priority**: MEDIUM | **Assignee**: TBD
 
 - [ ] Generate NetworkPolicy YAML
 - [ ] Cilium CiliumNetworkPolicy support
@@ -369,7 +363,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 4.1 PDF Report Generation
 
-**Effort**: 1 week
+**Priority**: LOW
 
 - [ ] Professional PDF templates
 - [ ] Charts and graphs
@@ -378,7 +372,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 4.2 SOC2/GDPR Templates
 
-**Effort**: 2 weeks
+**Priority**: MEDIUM
 
 - [ ] SOC2 Type II policy templates
 - [ ] GDPR data protection policies
@@ -387,7 +381,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 4.3 SIEM Integration
 
-**Effort**: 2 weeks
+**Priority**: MEDIUM
 
 - [ ] Splunk forwarder
 - [ ] Datadog integration
@@ -396,7 +390,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 4.4 Threat Intelligence
 
-**Effort**: 2 weeks
+**Priority**: MEDIUM
 
 - [ ] AlienVault OTX integration
 - [ ] Abuse.ch feeds
@@ -405,7 +399,7 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### 4.5 Change Management
 
-**Effort**: 2 weeks
+**Priority**: HIGH
 
 - [ ] Policy approval workflow
 - [ ] Change request tracking
@@ -418,19 +412,19 @@ pci-segment is **partially production-ready**. The cloud integration features (A
 
 ### Development Team
 
-**Phase 1 (Weeks 1-4)**:
+**Phase 1: Critical Production Features**:
 
 - 1x Senior Systems Engineer (eBPF/kernel)
 - 1x Security Engineer (hardening/audit)
 - 1x QA Engineer (testing)
 
-**Phase 2 (Weeks 5-8)**:
+**Phase 2: Enterprise Features**:
 
 - 1x DevOps Engineer (monitoring/HA)
 - 1x Security Engineer (pen testing)
 - 1x QA Engineer (testing)
 
-**Phase 3 (Weeks 9-12)**:
+**Phase 3: Additional Platforms**:
 
 - 1x Windows Developer (WFP)
 - 1x Cloud Engineer (GCP)
@@ -520,6 +514,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Last Updated**: October 15, 2025  
 **Version**: 1.0.0  
 **Status**: Active Development

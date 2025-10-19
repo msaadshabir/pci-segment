@@ -9,6 +9,10 @@ Automate compliance for Requirements 1.2 & 1.3 with policy-as-code, cloud auto-r
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Go Version](https://img.shields.io/badge/Go-1.23+-00ADD8?logo=go)](https://go.dev)
 [![PCI-DSS](https://img.shields.io/badge/PCI--DSS-v4.0-green)](https://www.pcisecuritystandards.org)
+[![Linux](https://img.shields.io/badge/Linux-eBPF-FCC624?logo=linux&logoColor=black)](https://ebpf.io)
+[![AWS](https://img.shields.io/badge/AWS-Security_Groups-FF9900?logo=amazon-aws&logoColor=white)](https://aws.amazon.com)
+[![Azure](https://img.shields.io/badge/Azure-NSG-0078D4?logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com)
+[![macOS](https://img.shields.io/badge/macOS-pf_firewall-000000?logo=apple&logoColor=white)](https://www.apple.com/macos)
 
 [Quick Start](#quick-start) • [Documentation](#documentation) • [Cloud Integration](examples/cloud/README.md) • [Roadmap](ROADMAP.md)
 
@@ -18,14 +22,14 @@ Automate compliance for Requirements 1.2 & 1.3 with policy-as-code, cloud auto-r
 
 ## The Problem
 
-**80% of PCI-DSS failures** stem from poor network segmentation *(Verizon 2023 PCI Report)*
+**80% of PCI-DSS failures** stem from poor network segmentation _(Verizon 2023 PCI Report)_
 
-| Challenge | pci-segment Solution |
-|-----------|---------------------|
+| Challenge                             | pci-segment Solution            |
+| ------------------------------------- | ------------------------------- |
 | Commercial tools cost $50k-$100k/year | Free, open-source (MIT license) |
-| Complex setup, vendor lock-in | Single binary, YAML policies |
-| Manual compliance validation | Automated reports for auditors |
-| No cloud integration | AWS/Azure auto-remediation |
+| Complex setup, vendor lock-in         | Single binary, YAML policies    |
+| Manual compliance validation          | Automated reports for auditors  |
+| No cloud integration                  | AWS/Azure auto-remediation      |
 
 ---
 
@@ -45,25 +49,25 @@ Automate compliance for Requirements 1.2 & 1.3 with policy-as-code, cloud auto-r
 
 ### Core Capabilities
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| **Policy Validation** | Enforce PCI-DSS Req 1.2/1.3 with YAML | Production-ready |
-| **Cloud Sync** | Auto-update AWS Security Groups & Azure NSGs | Production-ready |
-| **Drift Detection** | Find non-compliant cloud resources | Production-ready |
-| **Compliance Reports** | Generate HTML/JSON for QSA audits | Production-ready |
-| **Host Enforcement** | eBPF packet filtering (Linux) | In development |
+| Feature                | Description                                  | Status           |
+| ---------------------- | -------------------------------------------- | ---------------- |
+| **Policy Validation**  | Enforce PCI-DSS Req 1.2/1.3 with YAML        | Production-ready |
+| **Cloud Sync**         | Auto-update AWS Security Groups & Azure NSGs | Production-ready |
+| **Drift Detection**    | Find non-compliant cloud resources           | Production-ready |
+| **Compliance Reports** | Generate HTML/JSON for QSA audits            | Production-ready |
+| **Host Enforcement**   | eBPF packet filtering (Linux)                | In development   |
 
 ### Compliance Coverage
 
 <details>
 <summary><b>PCI-DSS Requirements Mapped</b></summary>
 
-| Requirement | Implementation |
-|-------------|----------------|
-| **Req 1.2** | Network segmentation via default-deny policies |
-| **Req 1.3** | CDE isolation with explicit allow rules only |
-| **Req 10.2** | Audit logging of all enforcement events |
-| **Req 12.10** | Executive summary reports for assessors |
+| Requirement   | Implementation                                 |
+| ------------- | ---------------------------------------------- |
+| **Req 1.2**   | Network segmentation via default-deny policies |
+| **Req 1.3**   | CDE isolation with explicit allow rules only   |
+| **Req 10.2**  | Audit logging of all enforcement events        |
+| **Req 12.10** | Executive summary reports for assessors        |
 
 </details>
 
@@ -90,16 +94,19 @@ cd pci-segment && go build -o pci-segment .
 ### Basic Usage
 
 **1. Validate a policy**
+
 ```bash
 pci-segment validate -f examples/policies/cde-isolation.yaml
 ```
 
 **2. Sync to cloud** (AWS/Azure)
+
 ```bash
 pci-segment cloud-sync -f examples/policies/*.yaml -c cloud-config.yaml --dry-run
 ```
 
 **3. Generate compliance report**
+
 ```bash
 pci-segment report -f examples/policies/*.yaml -o audit-report.html
 ```
@@ -117,17 +124,17 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      pci-env: cde  # CDE workloads only
-  
-  egress:  # Allow outbound to payment processors only
+      pci-env: cde # CDE workloads only
+
+  egress: # Allow outbound to payment processors only
     - to:
         - ipBlock:
             cidr: 10.0.10.0/24
       ports:
         - protocol: TCP
           port: 443
-  
-  ingress:  # Allow inbound from monitoring only
+
+  ingress: # Allow inbound from monitoring only
     - from:
         - ipBlock:
             cidr: 10.0.20.0/24
@@ -190,6 +197,7 @@ See [Cloud Integration Guide](examples/cloud/README.md) for setup details.
 <summary><b>Policy Examples</b></summary>
 
 **CDE Database Access**
+
 ```yaml
 apiVersion: pci-segment/v1
 kind: NetworkPolicy
@@ -205,11 +213,11 @@ spec:
   ingress:
     - from:
         - ipBlock:
-            cidr: 10.0.1.0/24  # App servers only
+            cidr: 10.0.1.0/24 # App servers only
       ports:
         - protocol: TCP
-          port: 5432  # PostgreSQL
-  egress: []  # Database cannot initiate outbound
+          port: 5432 # PostgreSQL
+  egress: [] # Database cannot initiate outbound
 ```
 
 More examples in [`examples/policies/`](examples/policies/)
@@ -222,14 +230,14 @@ More examples in [`examples/policies/`](examples/policies/)
 
 ### Current Status
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| AWS/Azure Cloud Integration | **Production-ready** | Deploy today |
-| Policy Validation Engine | **Production-ready** | Deploy today |
-| Compliance Reporting | **Production-ready** | Deploy today |
-| Linux eBPF Enforcement | **In Development** | [Skeleton only](ROADMAP.md#phase-1) |
-| Audit Logging | **In Development** | [No persistence](ROADMAP.md#phase-1) |
-| Monitoring/Alerting | **Planned** | [Phase 2](ROADMAP.md#phase-2) |
+| Component                   | Status               | Notes                                |
+| --------------------------- | -------------------- | ------------------------------------ |
+| AWS/Azure Cloud Integration | **Production-ready** | Deploy today                         |
+| Policy Validation Engine    | **Production-ready** | Deploy today                         |
+| Compliance Reporting        | **Production-ready** | Deploy today                         |
+| Linux eBPF Enforcement      | **In Development**   | [Skeleton only](ROADMAP.md#phase-1)  |
+| Audit Logging               | **In Development**   | [No persistence](ROADMAP.md#phase-1) |
+| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)        |
 
 **Important**: For production PCI-DSS compliance, use **cloud integration features** (AWS/Azure). Host-based eBPF enforcement is not yet functional. See [ROADMAP.md](ROADMAP.md) for details.
 
@@ -239,16 +247,19 @@ More examples in [`examples/policies/`](examples/policies/)
 <summary><b>Production Deployment Constraints</b></summary>
 
 **Host Enforcement**
+
 - Linux eBPF: Skeleton implementation only, does not block traffic
 - macOS pf: Development/testing only, requires sudo
 - Windows: Not yet supported (planned Phase 3)
 
 **Infrastructure**
+
 - Single instance only (no HA/clustering)
 - No real-time metrics export (Prometheus planned)
 - No persistent audit logging (Phase 1 priority)
 
 **Cloud Features**
+
 - Security Groups are stateful (differs from traditional firewalls)
 - AWS/Azure only (GCP planned Phase 3)
 
@@ -269,22 +280,26 @@ More examples in [`examples/policies/`](examples/policies/)
 
 ### In Progress
 
-**Phase 1: Core Security** (4 weeks)
+**Phase 1: Core Security**
+
 - [ ] Complete eBPF packet filtering (Linux)
 - [ ] Persistent audit logging with tamper detection
 - [ ] Security hardening (non-root, SELinux/AppArmor)
 
-**Phase 2: Enterprise** (4 weeks)
+**Phase 2: Enterprise**
+
 - [ ] Prometheus metrics + Grafana dashboards
 - [ ] High availability (etcd/Consul)
 - [ ] Performance testing (10Gbps+)
 
-**Phase 3: Expansion** (4 weeks)
+**Phase 3: Expansion**
+
 - [ ] Windows WFP support
 - [ ] GCP Cloud Firewall
 - [ ] Kubernetes NetworkPolicy generation
 
 **Phase 4: Advanced**
+
 - [ ] SOC2/GDPR policy templates
 - [ ] SIEM integrations (Splunk, Datadog)
 - [ ] PDF report generation
@@ -297,28 +312,29 @@ See [ROADMAP.md](ROADMAP.md) for detailed implementation plan.
 
 ### Components
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Policy Engine** | Go + YAML | Parse and validate PCI-DSS policies |
-| **Enforcer** | eBPF (Linux), pf (macOS) | Kernel-level packet filtering |
-| **Cloud Integrator** | AWS/Azure SDKs | Sync to Security Groups/NSGs |
-| **Reporter** | HTML templates | Generate QSA audit reports |
-| **CLI** | Cobra framework | User interface |
+| Layer                | Technology               | Purpose                             |
+| -------------------- | ------------------------ | ----------------------------------- |
+| **Policy Engine**    | Go + YAML                | Parse and validate PCI-DSS policies |
+| **Enforcer**         | eBPF (Linux), pf (macOS) | Kernel-level packet filtering       |
+| **Cloud Integrator** | AWS/Azure SDKs           | Sync to Security Groups/NSGs        |
+| **Reporter**         | HTML templates           | Generate QSA audit reports          |
+| **CLI**              | Cobra framework          | User interface                      |
 
 ### Security Model
 
-| Threat | Mitigation |
-|--------|-----------|
-| Policy bypass | Kernel-level enforcement (eBPF) |
-| Label spoofing | Validation against trusted inventory |
+| Threat              | Mitigation                             |
+| ------------------- | -------------------------------------- |
+| Policy bypass       | Kernel-level enforcement (eBPF)        |
+| Label spoofing      | Validation against trusted inventory   |
 | Credential exposure | Never log secrets, use cloud IAM roles |
-| Enforcer compromise | Drop privileges, minimal syscalls |
+| Enforcer compromise | Drop privileges, minimal syscalls      |
 
 ---
 
 ## Contributing
 
 Contributions welcome! We need help with:
+
 - **eBPF development** (kernel networking experts)
 - **Security hardening** (penetration testing)
 - **Platform support** (Windows WFP, GCP)
@@ -358,12 +374,12 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 **Solves a $50k/year problem for payment processors**
 
-| Traditional Approach | pci-segment |
-|---------------------|-------------|
-| Illumio, Tufin: $50k-$100k/year | Free, open-source |
+| Traditional Approach               | pci-segment                |
+| ---------------------------------- | -------------------------- |
+| Illumio, Tufin: $50k-$100k/year    | Free, open-source          |
 | Vendor lock-in, complex deployment | Single binary, YAML config |
-| No cloud integration | AWS/Azure auto-remediation |
-| Manual compliance validation | Automated QSA reports |
+| No cloud integration               | AWS/Azure auto-remediation |
+| Manual compliance validation       | Automated QSA reports      |
 
 Built for the fintech community with production-grade Go, eBPF, and cloud-native architecture.
 
@@ -373,6 +389,6 @@ Built for the fintech community with production-grade Go, eBPF, and cloud-native
 
 **[Get Started](#quick-start)** • **[Read the Docs](#documentation)** • **[View Roadmap](ROADMAP.md)**
 
-*Production-ready cloud features available today*
+_Production-ready cloud features available today_
 
 </div>
