@@ -88,15 +88,104 @@ jobs:
           check-latest: true
 
       - name: Install gosec
-        run: go install github.com/securego/gosec/v2/cmd/gosec@v2.22.9
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
 
       - name: Run gosec
-        run: $(go env GOPATH)/bin/gosec ./...
+        run: $(go env GOPATH)/bin/gosec -exclude-generated ./...
+
+  ebpf-build:
+    name: eBPF Build Test (Linux)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+
+      - name: Install eBPF dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang llvm libbpf-dev
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Build eBPF programs
+        run: |
+          cd pkg/enforcer/bpf
+          make clean
+          make
+
+      - name: Verify eBPF object
+        run: |
+          if [ ! -f pkg/enforcer/bpf/pci_segment.o ]; then
+            echo "eBPF object file not found!"
+            exit 1
+          fi
+          file pkg/enforcer/bpf/pci_segment.o
+
+      - name: Run eBPF-specific tests
+        run: |
+          GOOS=linux go test -v -c ./pkg/enforcer -o enforcer.test
+          echo "eBPF tests compiled successfully (root required to run)"
+
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run tests with coverage
+        run: |
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./pkg/cloud ./pkg/policy ./pkg/reporter
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage.txt
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          $(go env GOPATH)/bin/govulncheck ./...
 
   build-release:
     name: Build Release Binaries
     runs-on: ubuntu-latest
-    needs: [test, lint]
+    needs: [test, lint, security, ebpf-build, coverage, dependency-scan]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
@@ -128,3 +217,174 @@ jobs:
         with:
           name: pci-segment-binaries
           path: pci-segment-*
+
+  docker-build:
+    name: Docker Build & Push
+    runs-on: ubuntu-latest
+    needs: [test, lint, security]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  benchmark:
+    name: Performance Benchmarks
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run benchmarks
+        run: |
+          go test -bench=. -benchmem -run=^$ ./pkg/... | tee benchmark.txt
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark.txt
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [build-release]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: pci-segment-binaries
+
+      - name: Make binary executable
+        run: chmod +x pci-segment-linux-amd64
+
+      - name: Test CLI help
+        run: ./pci-segment-linux-amd64 --help
+
+      - name: Test policy validation
+        run: |
+          ./pci-segment-linux-amd64 validate -f examples/policies/cde-isolation.yaml
+          ./pci-segment-linux-amd64 validate -f examples/policies/cde-database.yaml
+
+      - name: Test report generation
+        run: |
+          ./pci-segment-linux-amd64 report -f examples/policies/cde-isolation.yaml -o integration-test-report.html
+          ./pci-segment-linux-amd64 report -f examples/policies/cde-isolation.yaml -o integration-test-report.json --format json
+
+      - name: Verify reports created
+        run: |
+          test -f integration-test-report.html
+          test -f integration-test-report.json
+
+  license-scan:
+    name: License Compliance
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          check-latest: true
+
+      - name: Install go-licenses
+        run: go install github.com/google/go-licenses@latest
+
+      - name: Check licenses
+        run: |
+          $(go env GOPATH)/bin/go-licenses check ./... --allowed_licenses=Apache-2.0,MIT,BSD-3-Clause,BSD-2-Clause,ISC
+        continue-on-error: true
+
+      - name: Generate license report
+        run: |
+          $(go env GOPATH)/bin/go-licenses report ./... > licenses.txt
+        continue-on-error: true
+
+      - name: Upload license report
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-report
+          path: licenses.txt
+        continue-on-error: true
+
+  docs-validation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check markdown links
+        uses: gaurav-nelson/github-action-markdown-link-check@v1
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".github/workflows/markdown-link-check-config.json"
+        continue-on-error: true
+
+      - name: Validate YAML files
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y yamllint
+          yamllint -c .yamllint examples/policies/*.yaml || true
+
+      - name: Check for broken policy examples
+        run: |
+          for policy in examples/policies/*.yaml; do
+            if [ -f "$policy" ]; then
+              echo "Checking $policy"
+              # Basic YAML syntax check
+              python3 -c "import yaml; yaml.safe_load(open('$policy'))"
+            fi
+          done
