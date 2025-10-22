@@ -61,7 +61,9 @@ func main() {
 	}
 	defer func() {
 		fmt.Println("\nStopping enforcer...")
-		enf.Stop()
+		if err := enf.Stop(); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: Failed to stop enforcer: %v\n", err)
+		}
 	}()
 
 	fmt.Println("Enforcer started successfully")

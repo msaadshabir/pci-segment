@@ -136,12 +136,12 @@ func (e *EBPFEnforcerV2) Start() error {
 	// Attach XDP program to interface for ingress
 	iface, err := net.InterfaceByName(e.ifaceName)
 	if err != nil {
-		objs.IngressProg.Close()
-		objs.EgressProg.Close()
-		objs.IngressRules.Close()
-		objs.EgressRules.Close()
-		objs.Events.Close()
-		objs.Stats.Close()
+		_ = objs.IngressProg.Close()
+		_ = objs.EgressProg.Close()
+		_ = objs.IngressRules.Close()
+		_ = objs.EgressRules.Close()
+		_ = objs.Events.Close()
+		_ = objs.Stats.Close()
 		return fmt.Errorf("failed to find interface %s: %w", e.ifaceName, err)
 	}
 
@@ -150,12 +150,12 @@ func (e *EBPFEnforcerV2) Start() error {
 		Interface: iface.Index,
 	})
 	if err != nil {
-		objs.IngressProg.Close()
-		objs.EgressProg.Close()
-		objs.IngressRules.Close()
-		objs.EgressRules.Close()
-		objs.Events.Close()
-		objs.Stats.Close()
+		_ = objs.IngressProg.Close()
+		_ = objs.EgressProg.Close()
+		_ = objs.IngressRules.Close()
+		_ = objs.EgressRules.Close()
+		_ = objs.Events.Close()
+		_ = objs.Stats.Close()
 		return fmt.Errorf("failed to attach XDP program: %w", err)
 	}
 
@@ -166,13 +166,13 @@ func (e *EBPFEnforcerV2) Start() error {
 	// Open ring buffer for events
 	e.eventReader, err = ringbuf.NewReader(objs.Events)
 	if err != nil {
-		e.ingressLink.Close()
-		objs.IngressProg.Close()
-		objs.EgressProg.Close()
-		objs.IngressRules.Close()
-		objs.EgressRules.Close()
-		objs.Events.Close()
-		objs.Stats.Close()
+		_ = e.ingressLink.Close()
+		_ = objs.IngressProg.Close()
+		_ = objs.EgressProg.Close()
+		_ = objs.IngressRules.Close()
+		_ = objs.EgressRules.Close()
+		_ = objs.Events.Close()
+		_ = objs.Stats.Close()
 		return fmt.Errorf("failed to open event ring buffer: %w", err)
 	}
 
@@ -200,25 +200,25 @@ func (e *EBPFEnforcerV2) Stop() error {
 
 	// Close ring buffer reader
 	if e.eventReader != nil {
-		e.eventReader.Close()
+		_ = e.eventReader.Close() // Best effort cleanup
 	}
 
 	// Detach programs
 	if e.ingressLink != nil {
-		e.ingressLink.Close()
+		_ = e.ingressLink.Close() // Best effort cleanup
 	}
 	if e.egressLink != nil {
-		e.egressLink.Close()
+		_ = e.egressLink.Close() // Best effort cleanup
 	}
 
 	// Close BPF objects
 	if e.objs != nil {
-		e.objs.IngressProg.Close()
-		e.objs.EgressProg.Close()
-		e.objs.IngressRules.Close()
-		e.objs.EgressRules.Close()
-		e.objs.Events.Close()
-		e.objs.Stats.Close()
+		_ = e.objs.IngressProg.Close()  // Best effort cleanup
+		_ = e.objs.EgressProg.Close()   // Best effort cleanup
+		_ = e.objs.IngressRules.Close() // Best effort cleanup
+		_ = e.objs.EgressRules.Close()  // Best effort cleanup
+		_ = e.objs.Events.Close()       // Best effort cleanup
+		_ = e.objs.Stats.Close()        // Best effort cleanup
 	}
 
 	e.running = false
@@ -451,14 +451,19 @@ func (e *EBPFEnforcerV2) policyToRules(pol *policy.Policy, ingress bool) ([]Poli
 				rules = append(rules, bpfRule)
 			} else {
 				for _, port := range rule.Ports {
+					// Port validation is done by policy engine (0-65535 check)
+					// Safe conversion to uint16
+					if port.Port < 0 || port.Port > 65535 {
+						continue // Skip invalid ports (shouldn't happen due to validation)
+					}
 					proto := protoStringToInt(port.Protocol)
 					bpfRule := PolicyRule{
 						SrcIP:      srcIP,
 						SrcMask:    srcMask,
 						DstIP:      dstIP,
 						DstMask:    dstMask,
-						DstPortMin: uint16(port.Port),
-						DstPortMax: uint16(port.Port),
+						DstPortMin: uint16(port.Port), // #nosec G115 - validated above
+						DstPortMax: uint16(port.Port), // #nosec G115 - validated above
 						Protocol:   proto,
 						Action:     ActionAllow,
 					}
@@ -486,7 +491,7 @@ func (e *EBPFEnforcerV2) updateRulesMap(m *ebpf.Map, rules []PolicyRule) error {
 		if i >= MaxRules {
 			return fmt.Errorf("too many rules (max %d)", MaxRules)
 		}
-		key := uint32(i)
+		key := uint32(i) // #nosec G115 - checked against MaxRules (1024) above
 		if err := m.Update(&key, &rule, ebpf.UpdateAny); err != nil {
 			return err
 		}
@@ -544,10 +549,12 @@ func ipToUint32(ip net.IP) uint32 {
 	if ip == nil {
 		return 0
 	}
-	return binary.BigEndian.Uint32(ip)
+	// Use little-endian to match BPF byte order expectations
+	return uint32(ip[0]) | uint32(ip[1])<<8 | uint32(ip[2])<<16 | uint32(ip[3])<<24
 }
 
 func ipToString(ip uint32) string {
+	// Convert from little-endian uint32 back to IP string
 	return fmt.Sprintf("%d.%d.%d.%d",
 		byte(ip), byte(ip>>8), byte(ip>>16), byte(ip>>24))
 }

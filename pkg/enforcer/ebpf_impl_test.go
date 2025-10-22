@@ -211,7 +211,11 @@ func TestAddPolicy(t *testing.T) {
 	if err := enforcer.Start(); err != nil {
 		t.Fatalf("Failed to start enforcer: %v", err)
 	}
-	defer enforcer.Stop()
+	defer func() {
+		if err := enforcer.Stop(); err != nil {
+			t.Errorf("Failed to stop enforcer: %v", err)
+		}
+	}()
 
 	// Create test policy
 	pol := &policy.Policy{
@@ -285,7 +289,11 @@ func TestRemovePolicy(t *testing.T) {
 	if err := enforcer.Start(); err != nil {
 		t.Fatalf("Failed to start enforcer: %v", err)
 	}
-	defer enforcer.Stop()
+	defer func() {
+		if err := enforcer.Stop(); err != nil {
+			t.Errorf("Failed to stop enforcer: %v", err)
+		}
+	}()
 
 	pol := &policy.Policy{
 		Metadata: policy.Metadata{
@@ -336,7 +344,11 @@ func TestGetStats(t *testing.T) {
 	if err := enforcer.Start(); err != nil {
 		t.Fatalf("Failed to start enforcer: %v", err)
 	}
-	defer enforcer.Stop()
+	defer func() {
+		if err := enforcer.Stop(); err != nil {
+			t.Errorf("Failed to stop enforcer: %v", err)
+		}
+	}()
 
 	// Get stats (should be 0 initially)
 	allowed, blocked, total, err := enforcer.GetStats()
@@ -361,7 +373,11 @@ func TestEventProcessing(t *testing.T) {
 	if err := enforcer.Start(); err != nil {
 		t.Fatalf("Failed to start enforcer: %v", err)
 	}
-	defer enforcer.Stop()
+	defer func() {
+		if err := enforcer.Stop(); err != nil {
+			t.Errorf("Failed to stop enforcer: %v", err)
+		}
+	}()
 
 	// Add a policy
 	pol := &policy.Policy{
