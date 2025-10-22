@@ -7,7 +7,8 @@ import (
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
-// EBPFEnforcer implements enforcement using Linux eBPF
+// EBPFEnforcer implements enforcement using Linux eBPF (legacy stub)
+// For production use, see EBPFEnforcerV2 in ebpf_impl.go
 type EBPFEnforcer struct {
 	policies []policy.Policy
 	events   []policy.EnforcementEvent
@@ -16,7 +17,10 @@ type EBPFEnforcer struct {
 }
 
 // NewEBPFEnforcer creates a new eBPF-based enforcer for Linux
+// This is the legacy stub implementation. Use NewEBPFEnforcerV2 for production.
 func NewEBPFEnforcer() (*EBPFEnforcer, error) {
+	fmt.Println("Warning: Using legacy stub eBPF enforcer")
+	fmt.Println("For production enforcement, use NewEBPFEnforcerV2(interfaceName)")
 	return &EBPFEnforcer{
 		policies: make([]policy.Policy, 0),
 		events:   make([]policy.EnforcementEvent, 0),

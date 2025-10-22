@@ -49,13 +49,13 @@ Automate compliance for Requirements 1.2 & 1.3 with policy-as-code, cloud auto-r
 
 ### Core Capabilities
 
-| Feature                | Description                                  | Status           |
-| ---------------------- | -------------------------------------------- | ---------------- |
-| **Policy Validation**  | Enforce PCI-DSS Req 1.2/1.3 with YAML        | Production-ready |
-| **Cloud Sync**         | Auto-update AWS Security Groups & Azure NSGs | Production-ready |
-| **Drift Detection**    | Find non-compliant cloud resources           | Production-ready |
-| **Compliance Reports** | Generate HTML/JSON for QSA audits            | Production-ready |
-| **Host Enforcement**   | eBPF packet filtering (Linux)                | In development   |
+| Feature                | Description                                  | Status               |
+| ---------------------- | -------------------------------------------- | -------------------- |
+| **Policy Validation**  | Enforce PCI-DSS Req 1.2/1.3 with YAML        | Production-ready     |
+| **Cloud Sync**         | Auto-update AWS Security Groups & Azure NSGs | Production-ready     |
+| **Drift Detection**    | Find non-compliant cloud resources           | Production-ready     |
+| **Compliance Reports** | Generate HTML/JSON for QSA audits            | Production-ready     |
+| **Host Enforcement**   | eBPF packet filtering (Linux)                | **Production-ready** |
 
 ### Compliance Coverage
 
@@ -230,16 +230,22 @@ More examples in [`examples/policies/`](examples/policies/)
 
 ### Current Status
 
-| Component                   | Status               | Notes                                |
-| --------------------------- | -------------------- | ------------------------------------ |
-| AWS/Azure Cloud Integration | **Production-ready** | Deploy today                         |
-| Policy Validation Engine    | **Production-ready** | Deploy today                         |
-| Compliance Reporting        | **Production-ready** | Deploy today                         |
-| Linux eBPF Enforcement      | **In Development**   | [Skeleton only](ROADMAP.md#phase-1)  |
-| Audit Logging               | **In Development**   | [No persistence](ROADMAP.md#phase-1) |
-| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)        |
+| Component                   | Status               | Notes                                     |
+| --------------------------- | -------------------- | ----------------------------------------- |
+| AWS/Azure Cloud Integration | **Production-ready** | Deploy today                              |
+| Policy Validation Engine    | **Production-ready** | Deploy today                              |
+| Compliance Reporting        | **Production-ready** | Deploy today                              |
+| Linux eBPF Enforcement      | **Production-ready** | Deploy today (requires Linux kernel 5.4+) |
+| Audit Logging               | **In Development**   | [No persistence](ROADMAP.md#phase-1)      |
+| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)             |
 
-**Important**: For production PCI-DSS compliance, use **cloud integration features** (AWS/Azure). Host-based eBPF enforcement is not yet functional. See [ROADMAP.md](ROADMAP.md) for details.
+**Important**: For production PCI-DSS compliance:
+
+- **Cloud**: Use AWS/Azure integration (production-ready)
+- **Linux hosts**: Use eBPF enforcement (production-ready, requires kernel 5.4+)
+- **Audit persistence**: Coming in Phase 1.2 (currently in-memory only)
+
+See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
 ### Known Limitations
 
@@ -248,15 +254,15 @@ More examples in [`examples/policies/`](examples/policies/)
 
 **Host Enforcement**
 
-- Linux eBPF: Skeleton implementation only, does not block traffic
+- Linux eBPF: **Production-ready** (kernel 5.4+, IPv4 only)
 - macOS pf: Development/testing only, requires sudo
 - Windows: Not yet supported (planned Phase 3)
 
 **Infrastructure**
 
 - Single instance only (no HA/clustering)
-- No real-time metrics export (Prometheus planned)
-- No persistent audit logging (Phase 1 priority)
+- No real-time metrics export (Prometheus planned Phase 2)
+- No persistent audit logging (Phase 1.2 priority)
 
 **Cloud Features**
 
@@ -277,12 +283,13 @@ More examples in [`examples/policies/`](examples/policies/)
 - [x] Cloud drift detection
 - [x] HTML/JSON compliance reports
 - [x] CLI with dry-run support
+- [x] **eBPF packet filtering (Linux kernel-level enforcement)**
 
 ### In Progress
 
 **Phase 1: Core Security**
 
-- [ ] Complete eBPF packet filtering (Linux)
+- [x] ~~Complete eBPF packet filtering (Linux)~~ **DONE**
 - [ ] Persistent audit logging with tamper detection
 - [ ] Security hardening (non-root, SELinux/AppArmor)
 

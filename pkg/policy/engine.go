@@ -80,6 +80,24 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 		result.Warnings = append(result.Warnings, "no pci-dss annotation found, compliance tracking unavailable")
 	}
 
+	// Validate ports in all rules
+	for _, rule := range policy.Spec.Ingress {
+		for _, port := range rule.Ports {
+			if port.Port < 0 || port.Port > 65535 {
+				result.Errors = append(result.Errors, fmt.Sprintf("invalid ingress port %d, must be between 0 and 65535", port.Port))
+				result.Valid = false
+			}
+		}
+	}
+	for _, rule := range policy.Spec.Egress {
+		for _, port := range rule.Ports {
+			if port.Port < 0 || port.Port > 65535 {
+				result.Errors = append(result.Errors, fmt.Sprintf("invalid egress port %d, must be between 0 and 65535", port.Port))
+				result.Valid = false
+			}
+		}
+	}
+
 	// Validate CDE labeling (PCI Requirement 1.2)
 	if isCDEPolicy(policy) {
 		if !hasProperCDELabel(policy) {

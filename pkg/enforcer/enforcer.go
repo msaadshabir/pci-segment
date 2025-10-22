@@ -2,6 +2,7 @@ package enforcer
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/msaadshabir/pci-segment/pkg/policy"
@@ -44,9 +45,19 @@ func NewEnforcer() (Enforcer, error) {
 
 // newLinuxEnforcer creates a Linux-specific enforcer
 func newLinuxEnforcer() (Enforcer, error) {
-	// On Linux, this would return NewEBPFEnforcer()
-	// For now, we'll return a stub
-	return &StubEnforcer{}, nil
+	// Use production eBPF enforcer
+	// Default to eth0, can be configured via environment variable
+	iface := "eth0"
+	if envIface := os.Getenv("PCI_SEGMENT_INTERFACE"); envIface != "" {
+		iface = envIface
+	}
+
+	enforcer, err := NewEBPFEnforcerV2(iface)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create eBPF enforcer: %w", err)
+	}
+
+	return enforcer, nil
 }
 
 // StubEnforcer is a placeholder for platforms without full implementation

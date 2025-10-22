@@ -123,8 +123,12 @@ func (a *AzureIntegrator) syncNetworkSecurityGroup(resourceGroup, nsgName string
 	}
 
 	if exists {
+		resourceID := ""
+		if existing.ID != nil {
+			resourceID = *existing.ID
+		}
 		result.Changes = append(result.Changes, Change{
-			ResourceID:   *existing.ID,
+			ResourceID:   resourceID,
 			ResourceName: nsgName,
 			Operation:    "update",
 			Details:      fmt.Sprintf("Updated NSG in resource group %s", resourceGroup),

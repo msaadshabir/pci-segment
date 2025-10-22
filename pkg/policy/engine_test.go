@@ -135,6 +135,78 @@ func TestValidatePCICompliance(t *testing.T) {
 			expectedValid: false,
 			expectedError: "0.0.0.0/0",
 		},
+		{
+			name: "invalid port - negative",
+			policy: Policy{
+				APIVersion: "pci-segment/v1",
+				Kind:       "NetworkPolicy",
+				Metadata: Metadata{
+					Name: "invalid-port-policy",
+					Annotations: map[string]string{
+						"pci-dss": "Req 1.3",
+					},
+				},
+				Spec: Spec{
+					PodSelector: PodSelector{
+						MatchLabels: map[string]string{
+							"app": "test",
+						},
+					},
+					Ingress: []Rule{
+						{
+							From: []Peer{
+								{
+									IPBlock: &IPBlock{
+										CIDR: "10.0.0.0/24",
+									},
+								},
+							},
+							Ports: []Port{
+								{Protocol: "TCP", Port: -1},
+							},
+						},
+					},
+				},
+			},
+			expectedValid: false,
+			expectedError: "invalid ingress port",
+		},
+		{
+			name: "invalid port - too large",
+			policy: Policy{
+				APIVersion: "pci-segment/v1",
+				Kind:       "NetworkPolicy",
+				Metadata: Metadata{
+					Name: "invalid-port-large-policy",
+					Annotations: map[string]string{
+						"pci-dss": "Req 1.3",
+					},
+				},
+				Spec: Spec{
+					PodSelector: PodSelector{
+						MatchLabels: map[string]string{
+							"app": "test",
+						},
+					},
+					Egress: []Rule{
+						{
+							To: []Peer{
+								{
+									IPBlock: &IPBlock{
+										CIDR: "10.0.0.0/24",
+									},
+								},
+							},
+							Ports: []Port{
+								{Protocol: "TCP", Port: 70000},
+							},
+						},
+					},
+				},
+			},
+			expectedValid: false,
+			expectedError: "invalid egress port",
+		},
 	}
 
 	for _, tt := range tests {
