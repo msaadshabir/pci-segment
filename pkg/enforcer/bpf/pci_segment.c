@@ -236,8 +236,6 @@ int pci_segment_ingress(struct xdp_md *ctx)
     int action = ACTION_DENY;
     __u32 matched_rule_id = 0;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpass-failed=transform-warning"
 #pragma unroll
     for (__u32 i = 0; i < MAX_RULES; i++)
     {
@@ -260,7 +258,6 @@ int pci_segment_ingress(struct xdp_md *ctx)
             break; // First match wins
         }
     }
-#pragma clang diagnostic pop
 
     // Log the decision
     log_event(src_ip, dst_ip, dst_port, protocol, action, matched_rule_id);
@@ -334,8 +331,6 @@ int pci_segment_egress(struct __sk_buff *skb)
     int action = ACTION_DENY;
     __u32 matched_rule_id = 0;
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wpass-failed=transform-warning"
 #pragma unroll
     for (__u32 i = 0; i < MAX_RULES; i++)
     {
@@ -357,7 +352,6 @@ int pci_segment_egress(struct __sk_buff *skb)
             break;
         }
     }
-#pragma clang diagnostic pop
 
     // Log the decision
     log_event(src_ip, dst_ip, dst_port, protocol, action, matched_rule_id);
