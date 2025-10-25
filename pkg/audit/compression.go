@@ -10,6 +10,7 @@ import (
 // compressFile compresses a file using gzip and removes the original
 func compressFile(filepath string) error {
 	// Open source file
+	// #nosec G304 -- filepath is from controlled audit log rotation, not user input
 	src, err := os.Open(filepath)
 	if err != nil {
 		return fmt.Errorf("failed to open source file: %w", err)
@@ -18,6 +19,7 @@ func compressFile(filepath string) error {
 
 	// Create compressed file
 	dstPath := filepath + ".gz"
+	// #nosec G304 -- dstPath is derived from controlled audit log rotation, not user input
 	dst, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0600)
 	if err != nil {
 		return fmt.Errorf("failed to create compressed file: %w", err)

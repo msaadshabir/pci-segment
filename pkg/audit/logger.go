@@ -448,6 +448,7 @@ func (l *FileLogger) cleanupOldLogs() error {
 
 // calculateFileChecksum calculates SHA-256 checksum of a file
 func calculateFileChecksum(filepath string) (string, error) {
+	// #nosec G304 -- filepath is from controlled audit log rotation, not user input
 	file, err := os.Open(filepath)
 	if err != nil {
 		return "", fmt.Errorf("failed to open file: %w", err)

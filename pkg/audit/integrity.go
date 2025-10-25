@@ -137,7 +137,8 @@ func (ic *IntegrityChecker) persist() error {
 	}
 
 	if err := os.Rename(tempPath, ic.dbPath); err != nil {
-		os.Remove(tempPath) // Clean up on error
+		// Clean up temp file on error (best effort)
+		_ = os.Remove(tempPath)
 		return fmt.Errorf("failed to rename checksum file: %w", err)
 	}
 
