@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/msaadshabir/pci-segment/pkg/policy"
 	// TODO: Re-enable after fixing Go module resolution issue
 	// "github.com/msaadshabir/pci-segment/pkg/policy"
 )
