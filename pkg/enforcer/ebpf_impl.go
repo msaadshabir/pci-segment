@@ -16,9 +16,7 @@ import (
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/ringbuf"
 
-	// TODO: Re-enable after fixing Go module resolution issue
-	// "github.com/msaadshabir/pci-segment/pkg/audit"
-
+	"github.com/msaadshabir/pci-segment/pkg/audit"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
@@ -74,9 +72,8 @@ type EBPFEnforcerV2 struct {
 	running  bool
 	mu       sync.RWMutex
 
-	// TODO: Re-enable after fixing Go module resolution issue
 	// Audit logger (persistent storage)
-	// auditLogger audit.Logger
+	auditLogger audit.Logger
 
 	// Network interface
 	ifaceName string
@@ -106,22 +103,19 @@ func NewEBPFEnforcerV2(interfaceName string) (*EBPFEnforcerV2, error) {
 	}
 
 	// Initialize audit logger with PCI-DSS compliant defaults
-	// TODO: Re-enable after fixing Go module resolution issue
-	/*
-		auditCfg := audit.DefaultConfig()
-		auditLogger, err := audit.NewLogger(auditCfg)
-		if err != nil {
-			// Fall back to in-memory only if audit logger fails
-			fmt.Fprintf(os.Stderr, "WARNING: Failed to initialize audit logger: %v\n", err)
-			fmt.Fprintf(os.Stderr, "WARNING: Audit events will be stored in memory only\n")
-			auditLogger = nil
-		}
-	*/
+	auditCfg := audit.DefaultConfig()
+	auditLogger, err := audit.NewLogger(auditCfg)
+	if err != nil {
+		// Fall back to in-memory only if audit logger fails
+		fmt.Fprintf(os.Stderr, "WARNING: Failed to initialize audit logger: %v\n", err)
+		fmt.Fprintf(os.Stderr, "WARNING: Audit events will be stored in memory only\n")
+		auditLogger = nil
+	}
 
 	return &EBPFEnforcerV2{
-		policies: make([]policy.Policy, 0),
-		events:   make([]policy.EnforcementEvent, 0, 10000),
-		// auditLogger:   auditLogger,
+		policies:      make([]policy.Policy, 0),
+		events:        make([]policy.EnforcementEvent, 0, 10000),
+		auditLogger:   auditLogger,
 		running:       false,
 		ifaceName:     interfaceName,
 		stopEventLoop: make(chan struct{}),
@@ -244,14 +238,11 @@ func (e *EBPFEnforcerV2) Stop() error {
 	}
 
 	// Close audit logger (flush and persist)
-	// TODO: Re-enable after fixing Go module resolution issue
-	/*
-		if e.auditLogger != nil {
-			if err := e.auditLogger.Close(); err != nil {
-				fmt.Fprintf(os.Stderr, "WARNING: Failed to close audit logger: %v\n", err)
-			}
+	if e.auditLogger != nil {
+		if err := e.auditLogger.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: Failed to close audit logger: %v\n", err)
 		}
-	*/
+	}
 
 	e.running = false
 	fmt.Println("eBPF enforcer stopped")
@@ -425,14 +416,12 @@ func (e *EBPFEnforcerV2) processEvents() {
 			}
 
 			// Log to persistent audit storage
-			// TODO: Re-enable after fixing Go module resolution issue
-			/*
-				if e.auditLogger != nil {
-					if err := e.auditLogger.Log(evt); err != nil {
-						fmt.Fprintf(os.Stderr, "ERROR: Failed to log audit event: %v\n", err)
-					}
+			if e.auditLogger != nil {
+				auditEvt := convertToAuditEvent(evt)
+				if err := e.auditLogger.Log(auditEvt); err != nil {
+					fmt.Fprintf(os.Stderr, "ERROR: Failed to log audit event: %v\n", err)
 				}
-			*/
+			}
 
 			// Store event in-memory (for GetEvents compatibility)
 			e.mu.Lock()
@@ -582,6 +571,20 @@ func (e *EBPFEnforcerV2) getRulePolicyName(_ uint32) string {
 		return e.policies[0].Metadata.Name
 	}
 	return "unknown"
+}
+
+// convertToAuditEvent converts a policy.EnforcementEvent to audit.EnforcementEvent
+func convertToAuditEvent(evt policy.EnforcementEvent) audit.EnforcementEvent {
+	return audit.EnforcementEvent{
+		Timestamp:  evt.Timestamp,
+		SourceIP:   evt.SourceIP,
+		DestIP:     evt.DestIP,
+		DestPort:   evt.DestPort,
+		Protocol:   evt.Protocol,
+		Action:     evt.Action,
+		PolicyName: evt.PolicyName,
+		PCIDSSReq:  evt.PCIDSSReq,
+	}
 }
 
 // Helper functions
