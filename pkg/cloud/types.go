@@ -17,8 +17,8 @@ const (
 	ProviderAzure Provider = "azure"
 )
 
-// CloudIntegrator defines the interface for cloud provider integrations
-type CloudIntegrator interface {
+// Integrator defines the interface for cloud provider integrations
+type Integrator interface {
 	// Sync applies policies to cloud security groups/NSGs
 	Sync(policies []policy.Policy) (*SyncResult, error)
 

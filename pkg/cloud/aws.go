@@ -383,7 +383,7 @@ func (a *AWSIntegrator) buildTags(pol *policy.Policy) []types.Tag {
 }
 
 // Validate checks if AWS resources comply with policies
-func (a *AWSIntegrator) Validate(policies []policy.Policy) (*ValidationReport, error) {
+func (a *AWSIntegrator) Validate(_ []policy.Policy) (*ValidationReport, error) {
 	report := &ValidationReport{
 		Provider:   ProviderAWS,
 		Timestamp:  time.Now(),
@@ -409,7 +409,7 @@ func (a *AWSIntegrator) Validate(policies []policy.Policy) (*ValidationReport, e
 
 	// Validate each security group against policies
 	for _, sg := range sgs.SecurityGroups {
-		violations := a.validateSecurityGroup(&sg, policies)
+		violations := a.validateSecurityGroup(&sg, nil)
 		if len(violations) > 0 {
 			report.Compliant = false
 			report.Violations = append(report.Violations, violations...)
@@ -420,7 +420,7 @@ func (a *AWSIntegrator) Validate(policies []policy.Policy) (*ValidationReport, e
 }
 
 // validateSecurityGroup checks a security group for policy violations
-func (a *AWSIntegrator) validateSecurityGroup(sg *types.SecurityGroup, policies []policy.Policy) []Violation {
+func (a *AWSIntegrator) validateSecurityGroup(sg *types.SecurityGroup, _ []policy.Policy) []Violation {
 	violations := make([]Violation, 0)
 
 	// Check for wildcard access (0.0.0.0/0)

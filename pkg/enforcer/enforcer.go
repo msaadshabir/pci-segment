@@ -81,7 +81,7 @@ func (e *StubEnforcer) AddPolicy(policy *policy.Policy) error {
 	return nil
 }
 
-func (e *StubEnforcer) RemovePolicy(policyName string) error {
+func (e *StubEnforcer) RemovePolicy(_ string) error {
 	return nil
 }
 

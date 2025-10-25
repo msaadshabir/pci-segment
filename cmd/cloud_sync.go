@@ -39,7 +39,7 @@ func init() {
 	}
 }
 
-func runCloudSync(cmd *cobra.Command, args []string) error {
+func runCloudSync(_ *cobra.Command, _ []string) error {
 	// Load cloud configuration
 	if verbose {
 		fmt.Printf("Loading cloud configuration from: %s\n", cloudConfigFile)

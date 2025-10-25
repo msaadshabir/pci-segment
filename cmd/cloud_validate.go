@@ -36,7 +36,7 @@ func init() {
 	}
 }
 
-func runCloudValidate(cmd *cobra.Command, args []string) error {
+func runCloudValidate(_ *cobra.Command, _ []string) error {
 	// Load cloud configuration
 	if verbose {
 		fmt.Printf("Loading cloud configuration from: %s\n", cloudConfigFile)

@@ -573,7 +573,7 @@ func (e *EBPFEnforcerV2) rebuildAllRules() error {
 }
 
 // getRulePolicyName gets the policy name for a rule ID
-func (e *EBPFEnforcerV2) getRulePolicyName(ruleID uint32) string {
+func (e *EBPFEnforcerV2) getRulePolicyName(_ uint32) string {
 	e.mu.RLock()
 	defer e.mu.RUnlock()
 

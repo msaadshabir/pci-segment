@@ -5,7 +5,7 @@ import (
 )
 
 // NewIntegrator creates a cloud integrator based on configuration
-func NewIntegrator(cfg *Config) (CloudIntegrator, error) {
+func NewIntegrator(cfg *Config) (Integrator, error) {
 	switch cfg.Provider {
 	case ProviderAWS:
 		return NewAWSIntegrator(cfg)

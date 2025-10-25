@@ -33,7 +33,7 @@ func init() {
 	}
 }
 
-func runReport(cmd *cobra.Command, args []string) error {
+func runReport(_ *cobra.Command, _ []string) error {
 	// Create policy engine
 	engine := policy.NewEngine()
 

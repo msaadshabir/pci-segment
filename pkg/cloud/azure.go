@@ -258,7 +258,7 @@ func (a *AzureIntegrator) buildTags(pol *policy.Policy) map[string]*string {
 }
 
 // Validate checks if Azure resources comply with policies
-func (a *AzureIntegrator) Validate(policies []policy.Policy) (*ValidationReport, error) {
+func (a *AzureIntegrator) Validate(_ []policy.Policy) (*ValidationReport, error) {
 	report := &ValidationReport{
 		Provider:   ProviderAzure,
 		Timestamp:  time.Now(),
@@ -278,7 +278,7 @@ func (a *AzureIntegrator) Validate(policies []policy.Policy) (*ValidationReport,
 
 			for _, nsg := range page.Value {
 				report.Resources++
-				violations := a.validateNetworkSecurityGroup(nsg, policies)
+				violations := a.validateNetworkSecurityGroup(nsg, nil)
 				if len(violations) > 0 {
 					report.Compliant = false
 					report.Violations = append(report.Violations, violations...)
@@ -291,7 +291,7 @@ func (a *AzureIntegrator) Validate(policies []policy.Policy) (*ValidationReport,
 }
 
 // validateNetworkSecurityGroup checks an NSG for policy violations
-func (a *AzureIntegrator) validateNetworkSecurityGroup(nsg *armnetwork.SecurityGroup, policies []policy.Policy) []Violation {
+func (a *AzureIntegrator) validateNetworkSecurityGroup(nsg *armnetwork.SecurityGroup, _ []policy.Policy) []Violation {
 	violations := make([]Violation, 0)
 
 	// Only validate NSGs managed by pci-segment

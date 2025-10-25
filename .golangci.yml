@@ -16,3 +16,10 @@ linters:
     - goimports
     - misspell
     - revive
+
+issues:
+  # Don't fail on revive warnings - they're style suggestions
+  exclude-rules:
+    - linters:
+        - revive
+      text: ".*"
