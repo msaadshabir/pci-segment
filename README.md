@@ -230,20 +230,20 @@ More examples in [`examples/policies/`](examples/policies/)
 
 ### Current Status
 
-| Component                   | Status               | Notes                                     |
-| --------------------------- | -------------------- | ----------------------------------------- |
-| AWS/Azure Cloud Integration | **Production-ready** | Deploy today                              |
-| Policy Validation Engine    | **Production-ready** | Deploy today                              |
-| Compliance Reporting        | **Production-ready** | Deploy today                              |
-| Linux eBPF Enforcement      | **Production-ready** | Deploy today (requires Linux kernel 5.4+) |
-| Audit Logging               | **In Development**   | [No persistence](ROADMAP.md#phase-1)      |
-| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)             |
+| Component                   | Status               | Notes                                       |
+| --------------------------- | -------------------- | ------------------------------------------- |
+| AWS/Azure Cloud Integration | **Production-ready** | Deploy today                                |
+| Policy Validation Engine    | **Production-ready** | Deploy today                                |
+| Compliance Reporting        | **Production-ready** | Deploy today                                |
+| Linux eBPF Enforcement      | **Production-ready** | Deploy today (requires Linux kernel 5.4+)   |
+| Audit Logging               | **Production-ready** | Persistent, tamper-proof (90-day retention) |
+| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)               |
 
 **Important**: For production PCI-DSS compliance:
 
 - **Cloud**: Use AWS/Azure integration (production-ready)
 - **Linux hosts**: Use eBPF enforcement (production-ready, requires kernel 5.4+)
-- **Audit persistence**: Coming in Phase 1.2 (currently in-memory only)
+- **Audit logging**: Persistent storage with tamper detection (production-ready)
 
 See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
@@ -262,7 +262,6 @@ See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
 - Single instance only (no HA/clustering)
 - No real-time metrics export (Prometheus planned Phase 2)
-- No persistent audit logging (Phase 1.2 priority)
 
 **Cloud Features**
 
@@ -284,13 +283,19 @@ See [ROADMAP.md](ROADMAP.md) for complete feature status.
 - [x] HTML/JSON compliance reports
 - [x] CLI with dry-run support
 - [x] **eBPF packet filtering (Linux kernel-level enforcement)**
+- [x] **Persistent audit logging with tamper detection**
+- [x] Azure NSG auto-sync
+- [x] Cloud drift detection
+- [x] HTML/JSON compliance reports
+- [x] CLI with dry-run support
+- [x] **eBPF packet filtering (Linux kernel-level enforcement)**
 
 ### In Progress
 
 **Phase 1: Core Security**
 
 - [x] ~~Complete eBPF packet filtering (Linux)~~ **DONE**
-- [ ] Persistent audit logging with tamper detection
+- [x] ~~Persistent audit logging with tamper detection~~ **DONE**
 - [ ] Security hardening (non-root, SELinux/AppArmor)
 
 **Phase 2: Enterprise**

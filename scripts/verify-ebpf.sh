@@ -25,9 +25,9 @@ FILES=(
 
 for file in "${FILES[@]}"; do
     if [ -f "$file" ]; then
-        echo -e "${GREEN}✓${NC} $file"
+        echo -e "${GREEN}[OK]${NC} $file"
     else
-        echo -e "✗ Missing: $file"
+        echo -e "[MISSING] $file"
         exit 1
     fi
 done
@@ -43,9 +43,9 @@ DOCS=(
 
 for doc in "${DOCS[@]}"; do
     if [ -f "$doc" ]; then
-        echo -e "${GREEN}✓${NC} $doc"
+        echo -e "${GREEN}[OK]${NC} $doc"
     else
-        echo -e "✗ Missing: $doc"
+        echo -e "[MISSING] $doc"
         exit 1
     fi
 done
@@ -54,9 +54,9 @@ echo ""
 # Check 3: Go dependencies
 echo -e "${YELLOW}[3/6] Checking Go dependencies...${NC}"
 if grep -q "github.com/cilium/ebpf" go.mod; then
-    echo -e "${GREEN}✓${NC} cilium/ebpf dependency present"
+    echo -e "${GREEN}[OK]${NC} cilium/ebpf dependency present"
 else
-    echo -e "✗ Missing cilium/ebpf dependency"
+    echo -e "[MISSING] cilium/ebpf dependency"
     exit 1
 fi
 echo ""
@@ -64,9 +64,9 @@ echo ""
 # Check 4: Build verification
 echo -e "${YELLOW}[4/6] Testing build (current platform)...${NC}"
 if go build -o /dev/null . 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} Build successful"
+    echo -e "${GREEN}[OK]${NC} Build successful"
 else
-    echo "✗ Build failed"
+    echo "[FAILED] Build failed"
     exit 1
 fi
 echo ""
@@ -74,9 +74,9 @@ echo ""
 # Check 5: Linux cross-compile
 echo -e "${YELLOW}[5/6] Testing Linux cross-compile...${NC}"
 if GOOS=linux GOARCH=amd64 go build -o /dev/null . 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} Linux build successful"
+    echo -e "${GREEN}[OK]${NC} Linux build successful"
 else
-    echo "✗ Linux build failed"
+    echo "[FAILED] Linux build failed"
     exit 1
 fi
 echo ""
@@ -120,8 +120,8 @@ echo "  - Documentation: COMPLETE"
 echo "  - Examples: COMPLETE"
 echo ""
 echo "Production Status: READY"
-echo "  - Cloud enforcement: ✓ Production-ready"
-echo "  - Linux eBPF enforcement: ✓ Production-ready"
+echo "  - Cloud enforcement: Production-ready"
+echo "  - Linux eBPF enforcement: Production-ready"
 echo "  - Next priority: Persistent audit logging"
 echo ""
 echo "To deploy on Linux:"

@@ -36,7 +36,7 @@ if [ ! -f pci_segment.o ]; then
     echo -e "${RED}Error: Failed to compile eBPF program${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ eBPF program compiled${NC}"
+echo -e "${GREEN}[OK] eBPF program compiled${NC}"
 echo ""
 
 # Build Go binary
@@ -47,7 +47,7 @@ if [ ! -f pci-segment ]; then
     echo -e "${RED}Error: Failed to build Go binary${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Binary built${NC}"
+echo -e "${GREEN}[OK] Binary built${NC}"
 echo ""
 
 # Create test policy
@@ -78,7 +78,7 @@ spec:
         - protocol: TCP
           port: 9090
 EOF
-echo -e "${GREEN}✓ Test policy created: /tmp/test-policy.yaml${NC}"
+echo -e "${GREEN}[OK] Test policy created: /tmp/test-policy.yaml${NC}"
 echo ""
 
 # Start enforcer in background
@@ -93,7 +93,7 @@ if ! kill -0 $ENFORCER_PID 2>/dev/null; then
     echo -e "${RED}Error: Enforcer failed to start${NC}"
     exit 1
 fi
-echo -e "${GREEN}✓ Enforcer running (PID: $ENFORCER_PID)${NC}"
+echo -e "${GREEN}[OK] Enforcer running (PID: $ENFORCER_PID)${NC}"
 echo ""
 
 # Generate test traffic
@@ -106,11 +106,11 @@ sleep 1
 
 # Send allowed traffic (should pass)
 echo "test" | nc -w 1 127.0.0.1 8080 || true
-echo -e "${GREEN}✓ Sent allowed traffic (TCP/8080)${NC}"
+echo -e "${GREEN}[OK] Sent allowed traffic (TCP/8080)${NC}"
 
 # Send blocked traffic (should be dropped)
 echo "test" | nc -w 1 127.0.0.1 9999 || true
-echo -e "${GREEN}✓ Sent blocked traffic (TCP/9999)${NC}"
+echo -e "${GREEN}[OK] Sent blocked traffic (TCP/9999)${NC}"
 
 # Cleanup test server
 kill $SERVER_PID 2>/dev/null || true
@@ -131,7 +131,7 @@ echo ""
 echo -e "${YELLOW}Stopping enforcer...${NC}"
 kill $ENFORCER_PID 2>/dev/null || true
 wait $ENFORCER_PID 2>/dev/null || true
-echo -e "${GREEN}✓ Enforcer stopped${NC}"
+echo -e "${GREEN}[OK] Enforcer stopped${NC}"
 echo ""
 
 # Cleanup

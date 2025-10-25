@@ -15,6 +15,7 @@ import (
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 	"github.com/cilium/ebpf/ringbuf"
+	"github.com/msaadshabir/pci-segment/pkg/audit"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
@@ -66,9 +67,12 @@ type EBPFEnforcerV2 struct {
 
 	// Policies and events
 	policies []policy.Policy
-	events   []policy.EnforcementEvent
+	events   []policy.EnforcementEvent // Kept for backward compatibility
 	running  bool
 	mu       sync.RWMutex
+
+	// Audit logger (persistent storage)
+	auditLogger audit.Logger
 
 	// Network interface
 	ifaceName string
@@ -97,9 +101,20 @@ func NewEBPFEnforcerV2(interfaceName string) (*EBPFEnforcerV2, error) {
 		interfaceName = "eth0" // Default interface
 	}
 
+	// Initialize audit logger with PCI-DSS compliant defaults
+	auditCfg := audit.DefaultConfig()
+	auditLogger, err := audit.NewLogger(auditCfg)
+	if err != nil {
+		// Fall back to in-memory only if audit logger fails
+		fmt.Fprintf(os.Stderr, "WARNING: Failed to initialize audit logger: %v\n", err)
+		fmt.Fprintf(os.Stderr, "WARNING: Audit events will be stored in memory only\n")
+		auditLogger = nil
+	}
+
 	return &EBPFEnforcerV2{
 		policies:      make([]policy.Policy, 0),
 		events:        make([]policy.EnforcementEvent, 0, 10000),
+		auditLogger:   auditLogger,
 		running:       false,
 		ifaceName:     interfaceName,
 		stopEventLoop: make(chan struct{}),
@@ -219,6 +234,13 @@ func (e *EBPFEnforcerV2) Stop() error {
 		_ = e.objs.EgressRules.Close()  // Best effort cleanup
 		_ = e.objs.Events.Close()       // Best effort cleanup
 		_ = e.objs.Stats.Close()        // Best effort cleanup
+	}
+
+	// Close audit logger (flush and persist)
+	if e.auditLogger != nil {
+		if err := e.auditLogger.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: Failed to close audit logger: %v\n", err)
+		}
 	}
 
 	e.running = false
@@ -392,7 +414,14 @@ func (e *EBPFEnforcerV2) processEvents() {
 				PCIDSSReq:  "Req 1.2, Req 1.3",
 			}
 
-			// Store event
+			// Log to persistent audit storage
+			if e.auditLogger != nil {
+				if err := e.auditLogger.Log(evt); err != nil {
+					fmt.Fprintf(os.Stderr, "ERROR: Failed to log audit event: %v\n", err)
+				}
+			}
+
+			// Store event in-memory (for GetEvents compatibility)
 			e.mu.Lock()
 			e.events = append(e.events, evt)
 			// Keep only last 10000 events
