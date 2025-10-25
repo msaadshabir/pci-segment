@@ -158,7 +158,9 @@ func (l *FileLogger) Verify() (bool, error) {
 	if err := l.closeLogFile(); err != nil {
 		return false, err
 	}
-	defer l.openLogFile() // Reopen for writing
+	defer func() {
+		_ = l.openLogFile() // Reopen for writing (best effort)
+	}()
 
 	// Calculate current checksum
 	checksum, err := calculateFileChecksum(l.config.LogFilePath)
