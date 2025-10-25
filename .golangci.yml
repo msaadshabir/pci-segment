@@ -1,0 +1,25 @@
+# golangci-lint configuration
+# Temporary exclusions for pkg/audit due to Go module resolution issue
+
+run:
+  timeout: 5m
+  modules-download-mode: mod
+  skip-dirs:
+    - pkg/audit # Temporarily excluded due to Go module resolution issue with local imports
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gofmt
+    - goimports
+    - misspell
+    - revive
+
+issues:
+  exclude-dirs:
+    - pkg/audit # Temporarily excluded

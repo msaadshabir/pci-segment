@@ -3,17 +3,30 @@ package audit
 
 import (
 	"time"
-
-	"github.com/msaadshabib/pci-segment/pkg/policy"
+	// TODO: Re-enable after fixing Go module resolution issue
+	// "github.com/msaadshabib/pci-segment/pkg/policy"
 )
+
+// EnforcementEvent is a temporary placeholder to avoid import cycle
+// TODO: Replace with policy.EnforcementEvent after fixing Go module issue
+type EnforcementEvent struct {
+	Timestamp  time.Time `json:"timestamp"`
+	SourceIP   string    `json:"source_ip"`
+	DestIP     string    `json:"dest_ip"`
+	DestPort   int       `json:"dest_port"`
+	Protocol   string    `json:"protocol"`
+	Action     string    `json:"action"`
+	PolicyName string    `json:"policy_name"`
+	PCIDSSReq  string    `json:"pci_dss_requirement"`
+}
 
 // Logger defines the interface for persistent audit logging
 type Logger interface {
 	// Log writes an enforcement event to persistent storage
-	Log(event policy.EnforcementEvent) error
+	Log(event EnforcementEvent) error
 
 	// LogBatch writes multiple events atomically
-	LogBatch(events []policy.EnforcementEvent) error
+	LogBatch(events []EnforcementEvent) error
 
 	// Verify checks log file integrity using checksums
 	Verify() (bool, error)

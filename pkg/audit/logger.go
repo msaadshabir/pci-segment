@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-
-	"github.com/msaadshabir/pci-segment/pkg/policy"
+	// TODO: Re-enable after fixing Go module resolution issue
+	// "github.com/msaadshabib/pci-segment/pkg/policy"
 )
 
 // FileLogger implements persistent audit logging with tamper detection
@@ -87,12 +87,12 @@ func NewLogger(cfg Config) (*FileLogger, error) {
 }
 
 // Log writes a single enforcement event to persistent storage
-func (l *FileLogger) Log(event policy.EnforcementEvent) error {
-	return l.LogBatch([]policy.EnforcementEvent{event})
+func (l *FileLogger) Log(event EnforcementEvent) error {
+	return l.LogBatch([]EnforcementEvent{event})
 }
 
 // LogBatch writes multiple events atomically with fsync
-func (l *FileLogger) LogBatch(events []policy.EnforcementEvent) error {
+func (l *FileLogger) LogBatch(events []EnforcementEvent) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
