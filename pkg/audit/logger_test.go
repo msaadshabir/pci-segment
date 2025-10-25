@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/msaadshabir/pci-segment/pkg/policy"
+	// TODO: Re-enable after fixing Go module resolution issue
+	// "github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
 func TestNewLogger(t *testing.T) {
@@ -93,7 +95,7 @@ func TestFileLogger_Log(t *testing.T) {
 	defer logger.Close()
 
 	// Create test event
-	event := policy.EnforcementEvent{
+	event := EnforcementEvent{
 		Timestamp:  time.Now(),
 		SourceIP:   "10.0.1.100",
 		DestIP:     "10.0.2.200",
@@ -116,7 +118,7 @@ func TestFileLogger_Log(t *testing.T) {
 	}
 
 	// Parse JSON line
-	var loggedEvent policy.EnforcementEvent
+	var loggedEvent EnforcementEvent
 	if err := json.Unmarshal(data, &loggedEvent); err != nil {
 		t.Fatalf("Failed to parse logged event: %v", err)
 	}
@@ -154,7 +156,7 @@ func TestFileLogger_LogBatch(t *testing.T) {
 	defer logger.Close()
 
 	// Create multiple events
-	events := []policy.EnforcementEvent{
+	events := []EnforcementEvent{
 		{
 			Timestamp:  time.Now(),
 			SourceIP:   "10.0.1.100",
@@ -212,7 +214,7 @@ func TestFileLogger_Rotation(t *testing.T) {
 	defer logger.Close()
 
 	// Write events until rotation triggers (>1MB)
-	event := policy.EnforcementEvent{
+	event := EnforcementEvent{
 		Timestamp:  time.Now(),
 		SourceIP:   "10.0.1.100",
 		DestIP:     "10.0.2.200",
@@ -272,7 +274,7 @@ func TestFileLogger_Verify(t *testing.T) {
 	}
 
 	// Log an event
-	event := policy.EnforcementEvent{
+	event := EnforcementEvent{
 		Timestamp:  time.Now(),
 		SourceIP:   "10.0.1.100",
 		DestIP:     "10.0.2.200",
@@ -366,7 +368,7 @@ func TestFileLogger_ConcurrentWrites(t *testing.T) {
 	for i := 0; i < numGoroutines; i++ {
 		go func(id int) {
 			for j := 0; j < eventsPerGoroutine; j++ {
-				event := policy.EnforcementEvent{
+				event := EnforcementEvent{
 					Timestamp:  time.Now(),
 					SourceIP:   fmt.Sprintf("10.0.%d.%d", id, j),
 					DestIP:     "10.0.2.200",
@@ -436,7 +438,7 @@ func TestFileLogger_GetStats(t *testing.T) {
 
 	// Log some events
 	for i := 0; i < 5; i++ {
-		event := policy.EnforcementEvent{
+		event := EnforcementEvent{
 			Timestamp:  time.Now(),
 			SourceIP:   "10.0.1.100",
 			DestIP:     "10.0.2.200",
