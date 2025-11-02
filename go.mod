@@ -11,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.18.16
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.256.0
 	github.com/cilium/ebpf v0.19.0
+	github.com/syndtr/gocapability v0.0.0-20200815063812-42c35b437635
 	github.com/spf13/cobra v1.10.1
 	gopkg.in/yaml.v3 v3.0.1
 )

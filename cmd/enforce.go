@@ -3,9 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"runtime"
 
 	"github.com/msaadshabir/pci-segment/pkg/enforcer"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
+	"github.com/msaadshabir/pci-segment/pkg/security/privilege"
 	"github.com/spf13/cobra"
 )
 
@@ -20,18 +22,27 @@ var enforceCmd = &cobra.Command{
 
 var (
 	complianceMode string
+	allowRoot      bool
 )
 
 func init() {
 	rootCmd.AddCommand(enforceCmd)
 	enforceCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file or glob pattern (required)")
 	enforceCmd.Flags().StringVar(&complianceMode, "compliance", "pci", "compliance mode (pci, soc2)")
+	enforceCmd.Flags().BoolVar(&allowRoot, "allow-root", false, "allow running enforcement as root (disables privilege drop)")
 	if err := enforceCmd.MarkFlagRequired("file"); err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
 	}
 }
 
 func runEnforce(cmd *cobra.Command, args []string) error {
+	if runtime.GOOS == "linux" && !allowRoot {
+		cfg := privilege.FromEnv()
+		if err := privilege.Ensure(cfg); err != nil {
+			return fmt.Errorf("privilege hardening failed: %w", err)
+		}
+	}
+
 	// Create policy engine
 	engine := policy.NewEngine()
 

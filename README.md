@@ -111,6 +111,25 @@ pci-segment cloud-sync -f examples/policies/*.yaml -c cloud-config.yaml --dry-ru
 pci-segment report -f examples/policies/*.yaml -o audit-report.html
 ```
 
+#### Linux privilege hardening (required for production)
+
+```bash
+# One-time setup (create service account)
+sudo groupadd --system pci-segment || true
+sudo useradd --system --gid pci-segment --home-dir /var/lib/pci-segment \
+  --create-home --shell /usr/sbin/nologin pci-segment || true
+
+# Enforce with automatic privilege drop
+sudo PCI_SEGMENT_PRIVILEGE_USER=pci-segment \
+     PCI_SEGMENT_PRIVILEGE_GROUP=pci-segment \
+     pci-segment enforce -f policies/*.yaml
+```
+
+By default the CLI drops root after attaching eBPF programs, retaining only
+`CAP_BPF` and `CAP_NET_ADMIN`. Use `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1` or
+`--allow-root` for development overrides. See [`docs/HARDENING.md`](docs/HARDENING.md)
+for full guidance.
+
 <details>
 <summary><b>Show example policy</b></summary>
 
@@ -191,6 +210,8 @@ pci-segment cloud-validate \
 
 See [Cloud Integration Guide](examples/cloud/README.md) for setup details.
 
+For host hardening, follow [`docs/HARDENING.md`](docs/HARDENING.md).
+
 </details>
 
 <details>
@@ -244,6 +265,10 @@ More examples in [`examples/policies/`](examples/policies/)
 - **Cloud**: Use AWS/Azure integration (production-ready)
 - **Linux hosts**: Use eBPF enforcement (production-ready, requires kernel 5.4+)
 - **Audit logging**: Persistent storage with tamper detection (production-ready)
+- **Privilege hardening**: Run `pci-segment enforce` as root only for start-up; it now
+  automatically drops to the `pci-segment` service account and retains only
+  `CAP_BPF`/`CAP_NET_ADMIN`. Set `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1` or pass
+  `--allow-root` for development overrides.
 
 See [ROADMAP.md](ROADMAP.md) for complete feature status.
 

@@ -109,9 +109,9 @@ pci-segment is **production-ready for cloud and Linux host enforcement with pers
 
 **Privilege Separation**:
 
-- [ ] Run as `pci-segment` system user (not root)
-- [ ] Use `CAP_NET_ADMIN` + `CAP_BPF` capabilities only
-- [ ] Drop all other capabilities after startup
+- [x] Run as `pci-segment` system user (not root) _(binary now self-drops after attaching eBPF; requires host user setup)_
+- [x] Use `CAP_NET_ADMIN` + `CAP_BPF` capabilities only _(configurable overrides remain for development)_
+- [x] Drop all other capabilities after startup
 - [ ] Implement seccomp-bpf syscall filtering
 
 **SELinux/AppArmor Policies**:
