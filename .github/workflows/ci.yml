@@ -64,14 +64,9 @@ jobs:
         run: go mod download
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: v1.65.2
-          args: --timeout=5m --modules-download-mode=mod
-          skip-cache: true
-          skip-pkg-cache: true
-          skip-build-cache: true
-          install-mode: go
+        run: |
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.65.1
+          golangci-lint run --timeout=5m --modules-download-mode=mod
 
   security:
     name: Security Scan
