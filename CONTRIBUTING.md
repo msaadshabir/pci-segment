@@ -66,7 +66,7 @@ Thank you for your interest in contributing to pci-segment! This document provid
 
 ### Prerequisites
 
-- Go 1.24 or higher
+- Go 1.25 or higher
 - Make
 - Git
 

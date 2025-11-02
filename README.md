@@ -7,7 +7,7 @@ Automate compliance for Requirements 1.2 & 1.3 with policy-as-code, cloud auto-r
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev)
+[![Go Version](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev)
 [![PCI-DSS](https://img.shields.io/badge/PCI--DSS-v4.0-green)](https://www.pcisecuritystandards.org)
 [![Linux](https://img.shields.io/badge/Linux-eBPF-FCC624?logo=linux&logoColor=black)](https://ebpf.io)
 [![AWS](https://img.shields.io/badge/AWS-Security_Groups-FF9900?logo=amazon-aws&logoColor=white)](https://aws.amazon.com)
@@ -86,7 +86,7 @@ chmod +x pci-segment && sudo mv pci-segment /usr/local/bin/
 curl -L https://github.com/msaadshabir/pci-segment/releases/latest/download/pci-segment-linux-amd64 -o pci-segment
 chmod +x pci-segment && sudo mv pci-segment /usr/local/bin/
 
-# Or build from source (Go 1.24+)
+# Or build from source (Go 1.25+)
 git clone https://github.com/msaadshabir/pci-segment.git
 cd pci-segment && go build -o pci-segment .
 ```
