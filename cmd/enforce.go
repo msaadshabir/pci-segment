@@ -35,7 +35,7 @@ func init() {
 	}
 }
 
-func runEnforce(cmd *cobra.Command, args []string) error {
+func runEnforce(_ *cobra.Command, _ []string) error {
 	if runtime.GOOS == "linux" && !allowRoot {
 		cfg := privilege.FromEnv()
 		if err := privilege.Ensure(cfg); err != nil {

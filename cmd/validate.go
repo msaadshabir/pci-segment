@@ -24,7 +24,7 @@ func init() {
 	}
 }
 
-func runValidate(cmd *cobra.Command, args []string) error {
+func runValidate(_ *cobra.Command, _ []string) error {
 	// Create policy engine
 	engine := policy.NewEngine()
 

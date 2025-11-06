@@ -178,7 +178,7 @@ func (a *AWSIntegrator) syncSecurityGroup(vpcID, sgName, sgDescription string, p
 
 		// Add rules to new security group
 		if !a.config.DryRun && sgID != "" {
-			if err := a.addSecurityGroupRules(sgID, pol, result); err != nil {
+			if err := a.addSecurityGroupRules(sgID, pol); err != nil {
 				return err
 			}
 		}
@@ -226,7 +226,7 @@ func (a *AWSIntegrator) updateSecurityGroup(sgID string, pol *policy.Policy, res
 
 	// Add new rules
 	if !a.config.DryRun {
-		if err := a.addSecurityGroupRules(sgID, pol, result); err != nil {
+		if err := a.addSecurityGroupRules(sgID, pol); err != nil {
 			return err
 		}
 	}
@@ -243,7 +243,7 @@ func (a *AWSIntegrator) updateSecurityGroup(sgID string, pol *policy.Policy, res
 }
 
 // addSecurityGroupRules adds rules based on policy
-func (a *AWSIntegrator) addSecurityGroupRules(sgID string, pol *policy.Policy, result *SyncResult) error {
+func (a *AWSIntegrator) addSecurityGroupRules(sgID string, pol *policy.Policy) error {
 	// Add ingress rules
 	if len(pol.Spec.Ingress) > 0 {
 		ingressPerms := a.buildIngressPermissions(pol.Spec.Ingress)
