@@ -332,7 +332,7 @@ auditctl -w /var/log/pci-segment/audit.log -p wa
 
 ## Known Limitations
 
-1. **IPv6**: Not yet supported (planned for Phase 2)
+1. **IPv6**: Not yet supported (planned)
 2. **Egress TC**: Requires manual tc qdisc setup
 3. **Multi-interface**: One enforcer instance per interface
 4. **Rule limit**: Maximum 1024 rules per direction

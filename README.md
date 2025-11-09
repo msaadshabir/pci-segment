@@ -260,7 +260,7 @@ More examples in [`examples/policies/`](examples/policies/)
 | Compliance Reporting        | **Production-ready** | Deploy today                                |
 | Linux eBPF Enforcement      | **Production-ready** | Deploy today (requires Linux kernel 5.4+)   |
 | Audit Logging               | **Production-ready** | Persistent, tamper-proof (90-day retention) |
-| Monitoring/Alerting         | **Planned**          | [Phase 2](ROADMAP.md#phase-2)               |
+| Monitoring/Alerting         | **Planned**          | Prometheus metrics and alerting roadmap     |
 
 **Important**: For production PCI-DSS compliance:
 
@@ -284,17 +284,17 @@ See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
 - Linux eBPF: **Production-ready** (kernel 5.4+, IPv4 only)
 - macOS pf: Development/testing only, requires sudo
-- Windows: Not yet supported (planned Phase 3)
+- Windows: Not yet supported (planned)
 
 **Infrastructure**
 
 - Single instance only (no HA/clustering)
-- No real-time metrics export (Prometheus planned Phase 2)
+- No real-time metrics export (Prometheus planned)
 
 **Cloud Features**
 
 - Security Groups are stateful (differs from traditional firewalls)
-- AWS/Azure only (GCP planned Phase 3)
+- AWS/Azure only (GCP planned)
 
 </details>
 
@@ -302,30 +302,24 @@ See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
 ## Roadmap
 
-### Completed
+High-level status snapshot. Refer to `ROADMAP.md` for the full breakdown.
 
-- [x] PCI-DSS policy engine & validation
-- [x] AWS Security Groups auto-sync
-- [x] Azure NSG auto-sync
-- [x] Cloud drift detection
-- [x] HTML/JSON compliance reports
-- [x] CLI with dry-run support
-- [x] **eBPF packet filtering (Linux kernel-level enforcement)**
-- [x] **Persistent audit logging with tamper detection**
-- [x] Azure NSG auto-sync
-- [x] Cloud drift detection
-- [x] HTML/JSON compliance reports
-- [x] CLI with dry-run support
-- [x] **eBPF packet filtering (Linux kernel-level enforcement)**
+| Initiative                                | Status      | Notes                                               |
+| ----------------------------------------- | ----------- | --------------------------------------------------- |
+| PCI-DSS policy engine & validation        | Completed   | Policy-as-code workflows shipping in CLI            |
+| AWS Security Groups auto-sync             | Completed   | Production-tested cloud remediation                 |
+| Azure NSG auto-sync                       | Completed   | Parity with AWS workflow                            |
+| Cloud drift detection                     | Completed   | Continuous compliance checks for cloud resources    |
+| HTML/JSON compliance reports              | Completed   | Auditor-friendly outputs available via CLI          |
+| CLI with dry-run support                  | Completed   | Safe preview mode for all major commands            |
+| eBPF packet filtering (Linux enforcement) | Completed   | Kernel-level enforcement released                   |
+| Persistent audit logging                  | Completed   | Tamper-evident logs with retention controls         |
+| Security hardening                        | In progress | SELinux/AppArmor profiles and input validation work |
+| Observability                             | In progress | Prometheus metrics and Grafana dashboards           |
+| High availability                         | In progress | Leader election and distributed configuration       |
+| Platform expansion                        | In progress | Windows WFP agent and Kubernetes operator           |
 
-### In Progress
-
-- Security hardening (SELinux/AppArmor profiles, expanded input validation)
-- Observability (Prometheus metrics, Grafana dashboards)
-- High availability (leader election, distributed config)
-- Platform expansion (Windows WFP, Kubernetes operator)
-
-See the simplified [ROADMAP.md](ROADMAP.md) for current priorities and timelines.
+See `ROADMAP.md` for detailed priorities and next milestones.
 
 ---
 

@@ -194,15 +194,12 @@ func installSeccompFilter(denylist []string) error {
 		return fmt.Errorf("privilege: create seccomp filter: %w", err)
 	}
 
-	denyAction, err := seccomp.ActErrno.SetReturnCode(int16(unix.EPERM))
-	if err != nil {
-		return fmt.Errorf("privilege: configure seccomp errno action: %w", err)
-	}
+	denyAction := seccomp.ActErrno.SetReturnCode(uint16(unix.EPERM))
 
 	for _, name := range denylist {
 		sc, scErr := seccomp.GetSyscallFromName(name)
 		if scErr != nil {
-			if errors.Is(scErr, seccomp.ErrNoSyscall) || strings.Contains(strings.ToLower(scErr.Error()), "no such syscall") {
+			if errors.Is(scErr, seccomp.ErrSyscallDoesNotExist) {
 				continue
 			}
 			return fmt.Errorf("privilege: lookup syscall %q for seccomp: %w", name, scErr)
