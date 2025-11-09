@@ -1,8 +1,8 @@
 # Multi-stage build for PCI Segment
 FROM golang:1.25-alpine AS builder
 
-# Install build dependencies
-RUN apk add --no-cache git make clang llvm libbpf-dev linux-headers
+# Install build dependencies (libseccomp-dev/pkgconf needed for CGO seccomp bindings)
+RUN apk add --no-cache git make clang llvm libbpf-dev libseccomp-dev linux-headers pkgconf
 
 WORKDIR /build
 
@@ -23,7 +23,7 @@ RUN cd pkg/enforcer/bpf && make clean && make
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk add --no-cache ca-certificates libbpf
+RUN apk add --no-cache ca-certificates libbpf libseccomp
 
 WORKDIR /app
 
