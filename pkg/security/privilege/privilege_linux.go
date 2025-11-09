@@ -194,7 +194,7 @@ func installSeccompFilter(denylist []string) error {
 		return fmt.Errorf("privilege: create seccomp filter: %w", err)
 	}
 
-	denyAction := seccomp.ActErrno.SetReturnCode(uint16(unix.EPERM))
+	denyAction := seccomp.ActErrno.SetReturnCode(int16(unix.EPERM))
 
 	for _, name := range denylist {
 		sc, scErr := seccomp.GetSyscallFromName(name)
