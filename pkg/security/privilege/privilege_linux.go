@@ -3,12 +3,14 @@
 package privilege
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/user"
 	"strconv"
 	"strings"
 
+	seccomp "github.com/seccomp/libseccomp-golang"
 	"github.com/syndtr/gocapability/capability"
 	"golang.org/x/sys/unix"
 )
@@ -62,6 +64,12 @@ func Ensure(cfg Config) error {
 
 	if err := applyCapabilities(keepCaps); err != nil {
 		return err
+	}
+
+	if cfg.EnableSeccomp {
+		if err := installSeccompFilter(cfg.SeccompDenylist); err != nil {
+			return fmt.Errorf("privilege: seccomp filter install failed: %w (see docs/HARDENING.md)", err)
+		}
 	}
 
 	if os.Geteuid() == 0 {
@@ -170,4 +178,48 @@ func lookupCapability(name string) (capability.Cap, error) {
 	default:
 		return 0, fmt.Errorf("privilege: unsupported capability %q", name)
 	}
+}
+
+func installSeccompFilter(denylist []string) error {
+	if len(denylist) == 0 {
+		return nil
+	}
+
+	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+		return fmt.Errorf("privilege: enable no_new_privs before seccomp: %w", err)
+	}
+
+	filter, err := seccomp.NewFilter(seccomp.ActAllow)
+	if err != nil {
+		return fmt.Errorf("privilege: create seccomp filter: %w", err)
+	}
+
+	denyAction, err := seccomp.ActErrno.SetReturnCode(int16(unix.EPERM))
+	if err != nil {
+		return fmt.Errorf("privilege: configure seccomp errno action: %w", err)
+	}
+
+	for _, name := range denylist {
+		sc, scErr := seccomp.GetSyscallFromName(name)
+		if scErr != nil {
+			if errors.Is(scErr, seccomp.ErrNoSyscall) || strings.Contains(strings.ToLower(scErr.Error()), "no such syscall") {
+				continue
+			}
+			return fmt.Errorf("privilege: lookup syscall %q for seccomp: %w", name, scErr)
+		}
+
+		if err := filter.AddRule(sc, denyAction); err != nil {
+			return fmt.Errorf("privilege: add seccomp rule for %q: %w", name, err)
+		}
+	}
+
+	if err := filter.SetNoNewPrivsBit(true); err != nil {
+		return fmt.Errorf("privilege: set seccomp no_new_privs bit: %w", err)
+	}
+
+	if err := filter.Load(); err != nil {
+		return fmt.Errorf("privilege: load seccomp filter: %w", err)
+	}
+
+	return nil
 }

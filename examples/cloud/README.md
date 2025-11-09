@@ -171,7 +171,7 @@ pci-segment cloud-validate \
 
 [VALIDATION REPORT]
    Provider: aws
-   Timestamp: 2025-10-15T14:30:00Z
+  Timestamp: <RFC3339 time>
    Resources Checked: 3
    Status: [!] NON-COMPLIANT
 

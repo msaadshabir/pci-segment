@@ -1,8 +1,9 @@
-# Privilege Hardening Guide
+# Privilege & Syscall Hardening
 
-The enforcement path requires `CAP_BPF` and `CAP_NET_ADMIN` to attach the eBPF
-program. By default the CLI drops root privileges and continues as the
-`pci-segment` service account while retaining only those two capabilities.
+The enforcement path needs `CAP_BPF` and `CAP_NET_ADMIN` for eBPF attach. The
+binary starts with elevated privileges only long enough to load programs, then
+drops to the `pci-segment` service account, retaining a minimal capability set
+and enabling a seccomp-bpf denylist of risky syscalls.
 
 ## 1. Create the Service Account (Once Per Host)
 
@@ -17,7 +18,7 @@ sudo useradd \
   pci-segment || true
 ```
 
-## 2. Grant Capability-Bearing Wrapper (Systemd Example)
+## 2. Systemd Service (Capability Wrapper)
 
 ```bash
 sudo tee /etc/systemd/system/pci-segment.service >/dev/null <<'EOF'
@@ -53,12 +54,26 @@ programs, so the unit only keeps the minimum capability set alive for startup.
 - `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1`: skip the downgrade entirely.
 - `PCI_SEGMENT_PRIVILEGE_USER` / `PCI_SEGMENT_PRIVILEGE_GROUP`: override the
   target account without recompiling.
+- `PCI_SEGMENT_DISABLE_SECCOMP=1`: bypass the seccomp filter (only for local
+  debugging when unsupported syscalls are required).
 - `--allow-root`: per-invocation override from the CLI.
 
 Use overrides only for local testing. Production deployments **must** keep the
 defaults to satisfy PCI-DSS Requirement 2.2.4.
 
-## 4. Verification Checklist
+## 4. Seccomp Enforcement
+
+After the privilege drop completes, the binary installs a seccomp-bpf filter that
+denies risky kernel interfaces (`ptrace`, `userfaultfd`, module loading, mount
+operations, etc.). The filter runs in allow-by-default mode but blocks these
+dangerous syscalls with `EPERM`, aligning with PCI-DSS 2.2.5 guidance on
+restricting system functions.
+
+If the host kernel is too old to support a listed syscall, the filter skips that
+entry automatically. Use the disable override above if you need to run
+unsupported tooling locally.
+
+## 5. Verification Checklist
 
 After enabling the service:
 
@@ -71,6 +86,8 @@ Expected results:
 
 - The process runs as `pci-segment` (or the configured override).
 - `cap_eff` contains only `cap_bpf,cap_net_admin`.
+- `seccomp` should appear under `CapPrm` in `/proc/<pid>/status`, confirming the
+  filter is active.
 - Audit logs continue to appear under `/var/log/pci-segment/`.
 
 If the drop fails, the CLI exits with a descriptive error pointing back to this

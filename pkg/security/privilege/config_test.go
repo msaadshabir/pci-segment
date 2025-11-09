@@ -39,6 +39,21 @@ func TestFromEnvOverrides(t *testing.T) {
 	}
 }
 
+func TestFromEnvSeccompToggle(t *testing.T) {
+	t.Setenv(EnvDisableSeccomp, "1")
+
+	cfg := FromEnv()
+	if cfg.EnableSeccomp {
+		t.Fatal("expected seccomp to be disabled when env var is truthy")
+	}
+
+	t.Setenv(EnvDisableSeccomp, "0")
+	cfg = FromEnv()
+	if !cfg.EnableSeccomp {
+		t.Fatal("expected seccomp to remain enabled when env var is falsy")
+	}
+}
+
 func TestSkipRequested(t *testing.T) {
 	t.Setenv(EnvSkipDrop, "false")
 	if SkipRequested() {
