@@ -80,7 +80,6 @@ See `CONTRIBUTING.md` for workflow and standards.
 
 - Issues & Features: GitHub Issues
 - Questions: GitHub Discussions
-- Security: security@pci-segment.org
 
 ---
 
