@@ -181,28 +181,21 @@ Include:
 
 ## Priority Areas
 
-We especially welcome contributions in these areas:
+We especially welcome contributions in these areas (see ROADMAP for context):
 
-### High Priority
+### Near-Term
 
-- [ ] AWS/Azure cloud integrations
-- [ ] Real-time monitoring and alerting
-- [ ] Kubernetes NetworkPolicy generation
-- [ ] Additional policy examples
+- SELinux/AppArmor profiles for host hardening
+- Prometheus metrics + example Grafana dashboards
+- Input validation improvements (YAML schema, path sanitization)
+- IAM-based auth (AWS roles, Azure Managed Identity)
 
-### Medium Priority
+### Backlog
 
-- [ ] PDF report generation
-- [ ] SIEM integrations (Splunk, Datadog)
-- [ ] Windows WFP enforcer
-- [ ] Performance optimizations
-
-### Low Priority
-
-- [ ] Web UI dashboard
-- [ ] Policy testing framework
-- [ ] Multi-cloud support (GCP)
-- [ ] Threat intelligence integration
+- High availability (leader election, distributed config store)
+- Windows WFP enforcer
+- Kubernetes operator + policy generation
+- SIEM integrations (Splunk, Datadog) and PDF export
 
 ## Checklist
 

@@ -104,7 +104,7 @@ Each event is logged as a single JSON line:
 
 ```json
 {
-  "timestamp": "2025-10-24T14:30:00Z",
+  "timestamp": "<RFC3339 time>",
   "source_ip": "10.0.1.100",
   "dest_ip": "10.0.2.200",
   "dest_port": 443,
@@ -124,7 +124,7 @@ Logs are automatically rotated when:
 - File size exceeds `MaxFileSizeMB` (default: 100MB)
 - OR daily rotation is enabled and a new day begins
 
-Rotated files are named: `audit.log.20251024-143000`
+Rotated files are named: `audit.log.<timestamp>`
 
 ### Manual Rotation
 
@@ -348,4 +348,4 @@ go test ./pkg/audit/... -bench=.
 
 ## License
 
-Copyright © 2025 pci-segment contributors. All rights reserved.
+Copyright © pci-segment contributors. All rights reserved.

@@ -126,7 +126,9 @@ sudo PCI_SEGMENT_PRIVILEGE_USER=pci-segment \
 ```
 
 By default the CLI drops root after attaching eBPF programs, retaining only
-`CAP_BPF` and `CAP_NET_ADMIN`. Use `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1` or
+`CAP_BPF` and `CAP_NET_ADMIN` and installing a seccomp-bpf denylist to block
+dangerous syscalls like `ptrace`, module loading, and mount operations. Use
+`PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1`, `PCI_SEGMENT_DISABLE_SECCOMP=1`, or
 `--allow-root` for development overrides. See [`docs/HARDENING.md`](docs/HARDENING.md)
 for full guidance.
 
@@ -266,8 +268,9 @@ More examples in [`examples/policies/`](examples/policies/)
 - **Linux hosts**: Use eBPF enforcement (production-ready, requires kernel 5.4+)
 - **Audit logging**: Persistent storage with tamper detection (production-ready)
 - **Privilege hardening**: Run `pci-segment enforce` as root only for start-up; it now
-  automatically drops to the `pci-segment` service account and retains only
-  `CAP_BPF`/`CAP_NET_ADMIN`. Set `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1` or pass
+  automatically drops to the `pci-segment` service account, retains only
+  `CAP_BPF`/`CAP_NET_ADMIN`, and applies a seccomp-bpf denylist. Set
+  `PCI_SEGMENT_SKIP_PRIVILEGE_DROP=1`, `PCI_SEGMENT_DISABLE_SECCOMP=1`, or pass
   `--allow-root` for development overrides.
 
 See [ROADMAP.md](ROADMAP.md) for complete feature status.
@@ -317,31 +320,12 @@ See [ROADMAP.md](ROADMAP.md) for complete feature status.
 
 ### In Progress
 
-**Phase 1: Core Security**
+- Security hardening (SELinux/AppArmor profiles, expanded input validation)
+- Observability (Prometheus metrics, Grafana dashboards)
+- High availability (leader election, distributed config)
+- Platform expansion (Windows WFP, Kubernetes operator)
 
-- [x] ~~Complete eBPF packet filtering (Linux)~~ **DONE**
-- [x] ~~Persistent audit logging with tamper detection~~ **DONE**
-- [ ] Security hardening (non-root, SELinux/AppArmor)
-
-**Phase 2: Enterprise**
-
-- [ ] Prometheus metrics + Grafana dashboards
-- [ ] High availability (etcd/Consul)
-- [ ] Performance testing (10Gbps+)
-
-**Phase 3: Expansion**
-
-- [ ] Windows WFP support
-- [ ] GCP Cloud Firewall
-- [ ] Kubernetes NetworkPolicy generation
-
-**Phase 4: Advanced**
-
-- [ ] SOC2/GDPR policy templates
-- [ ] SIEM integrations (Splunk, Datadog)
-- [ ] PDF report generation
-
-See [ROADMAP.md](ROADMAP.md) for detailed implementation plan.
+See the simplified [ROADMAP.md](ROADMAP.md) for current priorities and timelines.
 
 ---
 
