@@ -116,7 +116,7 @@ func (r *Reporter) calculateSummary() ReportSummary {
 	summary := ReportSummary{
 		TotalPolicies: len(r.policies),
 		CDEServers:    0,
-		TotalServers:  100, // Mock data
+		TotalServers:  0,
 		BlockedEvents: 0,
 		AllowedEvents: 0,
 	}

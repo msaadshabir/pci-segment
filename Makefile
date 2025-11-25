@@ -25,10 +25,7 @@ build:
 ## test: Run all tests
 test:
 	@echo "Running tests..."
-	@# Note: Excluding pkg/enforcer and pkg/audit due to Go module resolution issue
-	@# with local imports on fresh builds. These packages are validated through
-	@# the build process and integration testing.
-	$(GOTEST) -v ./pkg/policy/... ./pkg/cloud/... ./pkg/reporter/... ./cmd/...
+	$(GOTEST) -v ./...
 	@echo "[OK] All tests passed"
 
 ## test-coverage: Run tests with coverage

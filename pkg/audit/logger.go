@@ -11,8 +11,6 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
-	// TODO: Re-enable after fixing Go module resolution issue
-	// "github.com/msaadshabib/pci-segment/pkg/policy"
 )
 
 // FileLogger implements persistent audit logging with tamper detection
