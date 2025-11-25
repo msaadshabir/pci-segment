@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -194,7 +195,7 @@ func TestFileLogger_Rotation(t *testing.T) {
 
 	config := Config{
 		LogFilePath:       filepath.Join(tmpDir, "audit.log"),
-		MaxFileSizeMB:     1, // Small size for testing
+		MaxFileSizeMB:     1, // 1MB for testing
 		RotateDaily:       false,
 		RetentionDays:     90,
 		ChecksumDBPath:    filepath.Join(tmpDir, "checksums.db"),
@@ -209,7 +210,10 @@ func TestFileLogger_Rotation(t *testing.T) {
 	}
 	defer logger.Close()
 
-	// Write events until rotation triggers (>1MB)
+	// Create a large event to hit the size threshold quickly
+	// The rotation check has a 5-second throttle, so we need to exceed
+	// the threshold before the second check happens
+	largePayload := strings.Repeat("X", 10000) // 10KB per event
 	event := EnforcementEvent{
 		Timestamp:  time.Now(),
 		SourceIP:   "10.0.1.100",
@@ -217,27 +221,27 @@ func TestFileLogger_Rotation(t *testing.T) {
 		DestPort:   443,
 		Protocol:   "TCP",
 		Action:     "ALLOWED",
-		PolicyName: "test-policy",
+		PolicyName: largePayload,
 	}
 
-	// Write many events to trigger rotation
-	eventCount := 0
-	for i := 0; i < 10000; i++ {
+	// Write enough events to exceed 1MB
+	for i := 0; i < 150; i++ {
 		if err := logger.Log(event); err != nil {
 			t.Fatalf("Log() failed: %v", err)
 		}
-		eventCount++
+	}
 
-		// Check if rotation occurred
-		stats := logger.GetStats()
-		if stats.RotatedFiles > 0 {
-			break
-		}
+	// Wait for rotation check throttle to expire
+	time.Sleep(6 * time.Second)
+
+	// Write one more event to trigger the rotation check
+	if err := logger.Log(event); err != nil {
+		t.Fatalf("Log() failed: %v", err)
 	}
 
 	stats := logger.GetStats()
 	if stats.RotatedFiles == 0 {
-		t.Errorf("Expected rotation to occur after writing %d events", eventCount)
+		t.Errorf("Expected rotation to occur, current file size: %d bytes", stats.CurrentFileSize)
 	}
 
 	// Verify rotated file exists
