@@ -417,8 +417,7 @@ func (e *EBPFEnforcerV2) processEvents() {
 
 			// Log to persistent audit storage
 			if e.auditLogger != nil {
-				auditEvt := convertToAuditEvent(evt)
-				if err := e.auditLogger.Log(auditEvt); err != nil {
+				if err := e.auditLogger.Log(evt); err != nil {
 					fmt.Fprintf(os.Stderr, "ERROR: Failed to log audit event: %v\n", err)
 				}
 			}
@@ -571,20 +570,6 @@ func (e *EBPFEnforcerV2) getRulePolicyName(_ uint32) string {
 		return e.policies[0].Metadata.Name
 	}
 	return "unknown"
-}
-
-// convertToAuditEvent converts a policy.EnforcementEvent to audit.EnforcementEvent
-func convertToAuditEvent(evt policy.EnforcementEvent) audit.EnforcementEvent {
-	return audit.EnforcementEvent{
-		Timestamp:  evt.Timestamp,
-		SourceIP:   evt.SourceIP,
-		DestIP:     evt.DestIP,
-		DestPort:   evt.DestPort,
-		Protocol:   evt.Protocol,
-		Action:     evt.Action,
-		PolicyName: evt.PolicyName,
-		PCIDSSReq:  evt.PCIDSSReq,
-	}
 }
 
 // Helper functions
