@@ -47,4 +47,4 @@ temp/
 .env.local
 
 # AI instructions (development only)
-AI_INSTRUCTIONS.md
+.github/copilot-instructions.md
