@@ -170,7 +170,7 @@ Global Flags:
 | Compliance Reporting        | Production-ready | Deploy today                   |
 | Linux eBPF Enforcement      | Production-ready | Requires Linux kernel 5.4+     |
 | Audit Logging               | Production-ready | Tamper-proof, 90-day retention |
-| Monitoring/Alerting         | Planned          | Prometheus metrics             |
+| Prometheus Metrics          | Production-ready | :9090/metrics endpoint         |
 
 ### Known Limitations
 
@@ -183,7 +183,6 @@ Global Flags:
 **Infrastructure:**
 
 - Single instance only (no HA/clustering)
-- No real-time metrics export (Prometheus planned)
 
 **Cloud Features:**
 
