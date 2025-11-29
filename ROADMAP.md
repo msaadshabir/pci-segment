@@ -57,7 +57,3 @@ Automate PCI-DSS network segmentation and reporting with minimal operational ove
 | Throughput loss at 10Gbps | < 2%               |
 | Audit log retention       | 90 days minimum    |
 | Enforcement uptime        | 99.9% (post-HA)    |
-
-## Contributing
-
-See `CONTRIBUTING.md` for guidelines. Priority areas: enforcer tests, daemon mode, Helm chart, Windows support.

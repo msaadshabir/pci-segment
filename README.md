@@ -217,28 +217,6 @@ See [ROADMAP.md](ROADMAP.md) for detailed status.
 - [Audit Logging](pkg/audit/README.md)
 - [eBPF Implementation](pkg/enforcer/bpf/README.md)
 
-## Contributing
-
-Contributions welcome. Areas where help is needed:
-
-- eBPF development (kernel networking experts)
-- Security hardening (penetration testing)
-- Platform support (Windows WFP, GCP)
-- Documentation (tutorials, use cases)
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-### Development Setup
-
-```bash
-git clone https://github.com/msaadshabir/pci-segment.git
-cd pci-segment
-make deps     # Install dependencies
-make build    # Build binary
-make test     # Run tests
-make lint     # Run linters
-```
-
 ## Support
 
 - Documentation: [examples/cloud/README.md](examples/cloud/README.md)
