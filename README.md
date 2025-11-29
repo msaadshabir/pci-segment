@@ -217,13 +217,6 @@ See [ROADMAP.md](ROADMAP.md) for detailed status.
 - [Audit Logging](pkg/audit/README.md)
 - [eBPF Implementation](pkg/enforcer/bpf/README.md)
 
-## Support
-
-- Documentation: [examples/cloud/README.md](examples/cloud/README.md)
-- Issues: [GitHub Issues](https://github.com/msaadshabir/pci-segment/issues)
-- Discussions: [GitHub Discussions](https://github.com/msaadshabir/pci-segment/discussions)
-- Security: Report vulnerabilities via GitHub Security Advisories
-
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.
