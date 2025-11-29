@@ -1,0 +1,131 @@
+# SELinux Type Enforcement Policy for pci-segment
+# PCI-DSS Requirements 2.2.4 and 2.2.5: Restrict system functions and services
+#
+# Install with:
+#   checkmodule -M -m -o pci_segment.mod pci_segment.te
+#   semodule_package -o pci_segment.pp -m pci_segment.mod -f pci_segment.fc
+#   semodule -i pci_segment.pp
+
+policy_module(pci_segment, 1.0.0)
+
+########################################
+# Type Declarations
+########################################
+
+# Domain type for the pci-segment process
+type pci_segment_t;
+
+# Executable type
+type pci_segment_exec_t;
+
+# Log file type
+type pci_segment_log_t;
+
+# Configuration file type
+type pci_segment_conf_t;
+
+# State/data file type (checksums, etc.)
+type pci_segment_var_lib_t;
+
+########################################
+# Domain Transition
+########################################
+
+# Allow init (systemd) to transition to pci_segment_t
+init_daemon_domain(pci_segment_t, pci_segment_exec_t)
+
+# Allow the domain to execute itself
+allow pci_segment_t pci_segment_exec_t:file { read execute execute_no_trans };
+
+########################################
+# Capabilities
+########################################
+
+# Required for eBPF and network interface operations
+allow pci_segment_t self:capability { net_admin sys_resource setuid setgid };
+
+# CAP_BPF for BPF syscalls (kernel 5.8+)
+allow pci_segment_t self:capability2 { bpf };
+
+# Capability manipulation for privilege drop
+allow pci_segment_t self:process { setcap setrlimit };
+
+########################################
+# BPF Permissions (kernel 5.8+)
+########################################
+
+# BPF program and map operations
+allow pci_segment_t self:bpf { map_create map_read map_write prog_load prog_run };
+
+########################################
+# Network Permissions
+########################################
+
+# XDP and TC attachment to network interfaces
+allow pci_segment_t self:netlink_route_socket { create bind getattr read write nlmsg_read nlmsg_write };
+
+# Raw network access for packet filtering
+allow pci_segment_t self:packet_socket { create bind getopt setopt read write };
+allow pci_segment_t self:rawip_socket { create bind getopt setopt read write };
+
+# Network interface operations
+corenet_rw_netif(pci_segment_t)
+
+########################################
+# File Access
+########################################
+
+# Read configuration files
+allow pci_segment_t pci_segment_conf_t:dir { search read getattr open };
+allow pci_segment_t pci_segment_conf_t:file { read getattr open };
+
+# Write log files
+allow pci_segment_t pci_segment_log_t:dir { search read write add_name remove_name getattr open create };
+allow pci_segment_t pci_segment_log_t:file { create read write append getattr setattr open rename unlink };
+
+# State files (checksums database)
+allow pci_segment_t pci_segment_var_lib_t:dir { search read write add_name remove_name getattr open create };
+allow pci_segment_t pci_segment_var_lib_t:file { create read write getattr setattr open rename unlink lock };
+
+########################################
+# BPF Filesystem
+########################################
+
+# Access to /sys/fs/bpf for map pinning
+fs_read_bpf_files(pci_segment_t)
+fs_manage_bpf_files(pci_segment_t)
+
+########################################
+# Proc Filesystem
+########################################
+
+# Read /proc/self for capability introspection
+allow pci_segment_t self:dir { search read getattr };
+allow pci_segment_t self:file { read getattr open };
+
+# Read kernel security state
+kernel_read_system_state(pci_segment_t)
+
+########################################
+# Seccomp
+########################################
+
+# Install seccomp-bpf filter
+allow pci_segment_t self:process { setcurrent };
+
+########################################
+# Standard Denials
+########################################
+
+# Deny module loading (defense in depth)
+dontaudit pci_segment_t self:capability sys_module;
+
+# Deny ptrace
+dontaudit pci_segment_t self:capability sys_ptrace;
+
+########################################
+# Logging
+########################################
+
+# Allow writing to syslog if configured
+logging_send_syslog_msg(pci_segment_t)

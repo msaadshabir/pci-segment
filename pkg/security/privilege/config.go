@@ -18,6 +18,17 @@ const (
 
 	// EnvDisableSeccomp disables seccomp hardening when set to a truthy value.
 	EnvDisableSeccomp = "PCI_SEGMENT_DISABLE_SECCOMP"
+
+	// EnvSELinuxProfile specifies the expected SELinux domain for verification.
+	// If set, the binary verifies it is running in this domain after privilege drop.
+	EnvSELinuxProfile = "PCI_SEGMENT_SELINUX_PROFILE"
+
+	// EnvAppArmorProfile specifies the expected AppArmor profile for verification.
+	// If set, the binary verifies it is confined by this profile after privilege drop.
+	EnvAppArmorProfile = "PCI_SEGMENT_APPARMOR_PROFILE"
+
+	// EnvSkipMACVerify disables MAC (SELinux/AppArmor) verification when set to a truthy value.
+	EnvSkipMACVerify = "PCI_SEGMENT_SKIP_MAC_VERIFY"
 )
 
 // Config encapsulates how privileges should be reduced before enforcement starts.
@@ -27,6 +38,11 @@ type Config struct {
 	KeepCaps        []string
 	EnableSeccomp   bool
 	SeccompDenylist []string
+
+	// MAC (Mandatory Access Control) settings
+	SELinuxProfile  string // Expected SELinux domain (e.g., "pci_segment_t")
+	AppArmorProfile string // Expected AppArmor profile (e.g., "pci-segment")
+	VerifyMAC       bool   // Whether to verify MAC profile after privilege drop
 }
 
 var defaultSeccompDenylist = []string{
@@ -61,6 +77,10 @@ func DefaultConfig() Config {
 		},
 		EnableSeccomp:   true,
 		SeccompDenylist: append([]string(nil), defaultSeccompDenylist...),
+		// MAC profiles are empty by default; set via env vars for verification
+		SELinuxProfile:  "",
+		AppArmorProfile: "",
+		VerifyMAC:       true,
 	}
 }
 
@@ -76,6 +96,15 @@ func FromEnv() Config {
 	}
 	if truthy(os.Getenv(EnvDisableSeccomp)) {
 		cfg.EnableSeccomp = false
+	}
+	if v := os.Getenv(EnvSELinuxProfile); v != "" {
+		cfg.SELinuxProfile = v
+	}
+	if v := os.Getenv(EnvAppArmorProfile); v != "" {
+		cfg.AppArmorProfile = v
+	}
+	if truthy(os.Getenv(EnvSkipMACVerify)) {
+		cfg.VerifyMAC = false
 	}
 
 	return cfg

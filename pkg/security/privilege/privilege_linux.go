@@ -70,6 +70,14 @@ func Ensure(cfg Config) error {
 		}
 	}
 
+	// Verify MAC (SELinux/AppArmor) profile if configured
+	if err := VerifyMAC(cfg); err != nil {
+		return fmt.Errorf("privilege: %w", err)
+	}
+
+	// Log MAC status for audit trail
+	LogMACStatus()
+
 	if os.Geteuid() == 0 {
 		return fmt.Errorf("privilege: expected to run as non-root after drop, still uid=0")
 	}

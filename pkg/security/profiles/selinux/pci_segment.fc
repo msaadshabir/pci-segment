@@ -1,0 +1,20 @@
+# SELinux File Contexts for pci-segment
+# PCI-DSS Requirements 2.2.4 and 2.2.5
+#
+# Apply with:
+#   semanage fcontext -a -t pci_segment_exec_t '/usr/local/bin/pci-segment'
+#   restorecon -v /usr/local/bin/pci-segment
+#
+# Or install via semodule_package with the .te file
+
+# Executable
+/usr/local/bin/pci-segment		--	gen_context(system_u:object_r:pci_segment_exec_t,s0)
+
+# Configuration directory and files
+/etc/pci-segment(/.*)?			gen_context(system_u:object_r:pci_segment_conf_t,s0)
+
+# Log directory and files
+/var/log/pci-segment(/.*)?		gen_context(system_u:object_r:pci_segment_log_t,s0)
+
+# State/lib directory (checksums, runtime state)
+/var/lib/pci-segment(/.*)?		gen_context(system_u:object_r:pci_segment_var_lib_t,s0)

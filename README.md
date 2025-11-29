@@ -16,12 +16,12 @@ Automate compliance for Requirements 1.2 and 1.3 with policy-as-code, cloud auto
 
 80% of PCI-DSS failures stem from poor network segmentation.
 
-| Challenge | pci-segment Solution |
-|-----------|---------------------|
+| Challenge                             | pci-segment Solution            |
+| ------------------------------------- | ------------------------------- |
 | Commercial tools cost $50k-$100k/year | Free, open-source (MIT license) |
-| Complex setup, vendor lock-in | Single binary, YAML policies |
-| Manual compliance validation | Automated reports for auditors |
-| No cloud integration | AWS/Azure auto-remediation |
+| Complex setup, vendor lock-in         | Single binary, YAML policies    |
+| Manual compliance validation          | Automated reports for auditors  |
+| No cloud integration                  | AWS/Azure auto-remediation      |
 
 ## What It Does
 
@@ -39,22 +39,22 @@ Automate compliance for Requirements 1.2 and 1.3 with policy-as-code, cloud auto
 
 ### Core Capabilities
 
-| Feature | Description | Status |
-|---------|-------------|--------|
-| Policy Validation | Enforce PCI-DSS Req 1.2/1.3 with YAML | Production-ready |
-| Cloud Sync | Auto-update AWS Security Groups and Azure NSGs | Production-ready |
-| Drift Detection | Find non-compliant cloud resources | Production-ready |
-| Compliance Reports | Generate HTML/JSON for QSA audits | Production-ready |
-| Host Enforcement | eBPF packet filtering (Linux) | Production-ready |
+| Feature            | Description                                    | Status           |
+| ------------------ | ---------------------------------------------- | ---------------- |
+| Policy Validation  | Enforce PCI-DSS Req 1.2/1.3 with YAML          | Production-ready |
+| Cloud Sync         | Auto-update AWS Security Groups and Azure NSGs | Production-ready |
+| Drift Detection    | Find non-compliant cloud resources             | Production-ready |
+| Compliance Reports | Generate HTML/JSON for QSA audits              | Production-ready |
+| Host Enforcement   | eBPF packet filtering (Linux)                  | Production-ready |
 
 ### Compliance Coverage
 
-| Requirement | Implementation |
-|-------------|----------------|
-| Req 1.2 | Network segmentation via default-deny policies |
-| Req 1.3 | CDE isolation with explicit allow rules only |
-| Req 10.2 | Audit logging of all enforcement events |
-| Req 12.10 | Executive summary reports for assessors |
+| Requirement | Implementation                                 |
+| ----------- | ---------------------------------------------- |
+| Req 1.2     | Network segmentation via default-deny policies |
+| Req 1.3     | CDE isolation with explicit allow rules only   |
+| Req 10.2    | Audit logging of all enforcement events        |
+| Req 12.10   | Executive summary reports for assessors        |
 
 ## Quick Start
 
@@ -77,16 +77,19 @@ cd pci-segment && go build -o pci-segment .
 ### Basic Usage
 
 **Validate a policy:**
+
 ```bash
 pci-segment validate -f examples/policies/cde-isolation.yaml
 ```
 
 **Sync to cloud (AWS/Azure):**
+
 ```bash
 pci-segment cloud-sync -f examples/policies/*.yaml -c cloud-config.yaml --dry-run
 ```
 
 **Generate compliance report:**
+
 ```bash
 pci-segment report -f examples/policies/*.yaml -o audit-report.html
 ```
@@ -160,27 +163,30 @@ Global Flags:
 
 ## Production Readiness
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| AWS/Azure Cloud Integration | Production-ready | Deploy today |
-| Policy Validation Engine | Production-ready | Deploy today |
-| Compliance Reporting | Production-ready | Deploy today |
-| Linux eBPF Enforcement | Production-ready | Requires Linux kernel 5.4+ |
-| Audit Logging | Production-ready | Tamper-proof, 90-day retention |
-| Monitoring/Alerting | Planned | Prometheus metrics |
+| Component                   | Status           | Notes                          |
+| --------------------------- | ---------------- | ------------------------------ |
+| AWS/Azure Cloud Integration | Production-ready | Deploy today                   |
+| Policy Validation Engine    | Production-ready | Deploy today                   |
+| Compliance Reporting        | Production-ready | Deploy today                   |
+| Linux eBPF Enforcement      | Production-ready | Requires Linux kernel 5.4+     |
+| Audit Logging               | Production-ready | Tamper-proof, 90-day retention |
+| Monitoring/Alerting         | Planned          | Prometheus metrics             |
 
 ### Known Limitations
 
 **Host Enforcement:**
+
 - Linux eBPF: Production-ready (kernel 5.4+, IPv4 only)
 - macOS pf: Development/testing only
 - Windows: Not yet supported (planned)
 
 **Infrastructure:**
+
 - Single instance only (no HA/clustering)
 - No real-time metrics export (Prometheus planned)
 
 **Cloud Features:**
+
 - Security Groups are stateful
 - AWS/Azure only (GCP planned)
 
@@ -188,22 +194,22 @@ See [ROADMAP.md](ROADMAP.md) for detailed status.
 
 ## Architecture
 
-| Layer | Technology | Purpose |
-|-------|------------|---------|
-| Policy Engine | Go + YAML | Parse and validate PCI-DSS policies |
-| Enforcer | eBPF (Linux), pf (macOS) | Kernel-level packet filtering |
-| Cloud Integrator | AWS/Azure SDKs | Sync to Security Groups/NSGs |
-| Reporter | HTML templates | Generate QSA audit reports |
-| CLI | Cobra framework | User interface |
+| Layer            | Technology               | Purpose                             |
+| ---------------- | ------------------------ | ----------------------------------- |
+| Policy Engine    | Go + YAML                | Parse and validate PCI-DSS policies |
+| Enforcer         | eBPF (Linux), pf (macOS) | Kernel-level packet filtering       |
+| Cloud Integrator | AWS/Azure SDKs           | Sync to Security Groups/NSGs        |
+| Reporter         | HTML templates           | Generate QSA audit reports          |
+| CLI              | Cobra framework          | User interface                      |
 
 ### Security Model
 
-| Threat | Mitigation |
-|--------|------------|
-| Policy bypass | Kernel-level enforcement (eBPF) |
-| Label spoofing | Validation against trusted inventory |
-| Credential exposure | Never log secrets, use cloud IAM roles |
-| Enforcer compromise | Drop privileges, minimal syscalls |
+| Threat              | Mitigation                                 |
+| ------------------- | ------------------------------------------ |
+| Policy bypass       | Kernel-level enforcement (eBPF)            |
+| Label spoofing      | Validation against trusted inventory       |
+| Credential exposure | Never log secrets, use cloud IAM roles     |
+| Enforcer compromise | Drop privileges, seccomp, SELinux/AppArmor |
 
 ## Documentation
 
