@@ -12,7 +12,7 @@ import (
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
-func TestSetBuildInfo(t *testing.T) {
+func TestSetBuildInfo(_ *testing.T) {
 	// Should not panic
 	SetBuildInfo("1.0.0", "go1.23.0")
 }
