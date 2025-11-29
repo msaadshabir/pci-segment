@@ -3,7 +3,6 @@
 package privilege
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -252,30 +251,4 @@ func LogMACStatus() {
 	if !status.SELinuxEnabled && !status.AppArmorEnabled {
 		fmt.Printf("[MAC] No MAC enforcement active (SELinux/AppArmor not detected)\n")
 	}
-}
-
-// parseAppArmorStatus parses aa-status output to list loaded profiles.
-// This is a helper for verification scripts, not used at runtime.
-func parseAppArmorStatus(r *bufio.Reader) ([]string, error) {
-	var profiles []string
-	inProfileSection := false
-
-	scanner := bufio.NewScanner(r)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-
-		if strings.Contains(line, "profiles are loaded") {
-			inProfileSection = true
-			continue
-		}
-
-		if inProfileSection && strings.HasPrefix(line, "/") {
-			// Profile line format: "/path/to/binary (mode)"
-			if idx := strings.Index(line, " "); idx != -1 {
-				profiles = append(profiles, line[:idx])
-			}
-		}
-	}
-
-	return profiles, scanner.Err()
 }
