@@ -456,3 +456,197 @@ func BenchmarkIPConversion(b *testing.B) {
 		_ = ipToUint32(ip)
 	}
 }
+
+func TestPolicyToRulesEmptyPeers(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "empty-peers"},
+		Spec: policy.Spec{
+			Ingress: []policy.Rule{
+				{
+					From:  []policy.Peer{},
+					Ports: []policy.Port{{Protocol: "TCP", Port: 443}},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, true)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 0 {
+		t.Errorf("expected 0 rules for empty peers, got %d", len(rules))
+	}
+}
+
+func TestPolicyToRulesNilIPBlock(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "nil-ipblock"},
+		Spec: policy.Spec{
+			Ingress: []policy.Rule{
+				{
+					From:  []policy.Peer{{IPBlock: nil}},
+					Ports: []policy.Port{{Protocol: "TCP", Port: 80}},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, true)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 0 {
+		t.Errorf("expected 0 rules for nil IPBlock, got %d", len(rules))
+	}
+}
+
+func TestPolicyToRulesEmptyPorts(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "empty-ports"},
+		Spec: policy.Spec{
+			Ingress: []policy.Rule{
+				{
+					From:  []policy.Peer{{IPBlock: &policy.IPBlock{CIDR: "10.0.0.0/24"}}},
+					Ports: []policy.Port{},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, true)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 1 {
+		t.Errorf("expected 1 rule for empty ports, got %d", len(rules))
+	}
+}
+
+func TestPolicyToRulesMultiplePeers(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "multi-peers"},
+		Spec: policy.Spec{
+			Ingress: []policy.Rule{
+				{
+					From: []policy.Peer{
+						{IPBlock: &policy.IPBlock{CIDR: "10.0.0.0/24"}},
+						{IPBlock: &policy.IPBlock{CIDR: "192.168.1.0/24"}},
+					},
+					Ports: []policy.Port{{Protocol: "TCP", Port: 443}},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, true)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 2 {
+		t.Errorf("expected 2 rules for 2 peers, got %d", len(rules))
+	}
+}
+
+func TestPolicyToRulesMultiplePorts(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "multi-ports"},
+		Spec: policy.Spec{
+			Ingress: []policy.Rule{
+				{
+					From: []policy.Peer{
+						{IPBlock: &policy.IPBlock{CIDR: "10.0.0.0/24"}},
+					},
+					Ports: []policy.Port{
+						{Protocol: "TCP", Port: 80},
+						{Protocol: "TCP", Port: 443},
+					},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, true)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 2 {
+		t.Errorf("expected 2 rules for 2 ports, got %d", len(rules))
+	}
+}
+
+func TestPolicyToRulesEgress(t *testing.T) {
+	enforcer, err := NewEBPFEnforcerV2("lo")
+	if err != nil {
+		t.Fatalf("Failed to create enforcer: %v", err)
+	}
+
+	pol := &policy.Policy{
+		Metadata: policy.Metadata{Name: "egress-test"},
+		Spec: policy.Spec{
+			Egress: []policy.Rule{
+				{
+					To: []policy.Peer{
+						{IPBlock: &policy.IPBlock{CIDR: "10.0.2.0/24"}},
+					},
+					Ports: []policy.Port{{Protocol: "TCP", Port: 5432}},
+				},
+			},
+		},
+	}
+
+	rules, err := enforcer.policyToRules(pol, false)
+	if err != nil {
+		t.Fatalf("policyToRules failed: %v", err)
+	}
+	if len(rules) != 1 {
+		t.Errorf("expected 1 egress rule, got %d", len(rules))
+	}
+}
+
+func TestProtoConversionUnknown(t *testing.T) {
+	got := protoToString(200)
+	if got != "UNKNOWN" {
+		t.Errorf("protoToString(200) = %s, want UNKNOWN", got)
+	}
+}
+
+func TestIPv6ToUint32(t *testing.T) {
+	ip := net.ParseIP("::1")
+	got := ipToUint32(ip)
+	if got != 0 {
+		t.Errorf("ipToUint32(::1) = %d, want 0 (IPv6 not supported)", got)
+	}
+}
+
+func TestIPToStringZero(t *testing.T) {
+	got := ipToString(0)
+	if got != "0.0.0.0" {
+		t.Errorf("ipToString(0) = %s, want 0.0.0.0", got)
+	}
+}

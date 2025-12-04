@@ -120,12 +120,12 @@ Network Card (Egress)
 
 ### BPF Maps
 
-| Map | Type | Size | Purpose |
-|-----|------|------|---------|
-| ingress_rules | ARRAY | 1024 | Ingress packet filter rules |
-| egress_rules | ARRAY | 1024 | Egress packet filter rules |
-| events | RINGBUF | 256 KB | Real-time event logging |
-| stats | ARRAY | 4 | Packet statistics counters |
+| Map           | Type    | Size   | Purpose                     |
+| ------------- | ------- | ------ | --------------------------- |
+| ingress_rules | ARRAY   | 1024   | Ingress packet filter rules |
+| egress_rules  | ARRAY   | 1024   | Egress packet filter rules  |
+| events        | RINGBUF | 256 KB | Real-time event logging     |
+| stats         | ARRAY   | 4      | Packet statistics counters  |
 
 ### Policy Rule Structure
 
@@ -146,14 +146,15 @@ struct policy_rule {
 
 Benchmarks on 10Gbps NIC:
 
-| Metric | Value |
-|--------|-------|
-| Latency overhead | < 100 microseconds per packet |
-| Throughput | 9.8 Gbps (< 2% loss at line rate) |
-| CPU usage | < 5% (single core at 1Gbps) |
-| Memory | < 2MB (for 1000 rules) |
+| Metric           | Value                             |
+| ---------------- | --------------------------------- |
+| Latency overhead | < 100 microseconds per packet     |
+| Throughput       | 9.8 Gbps (< 2% loss at line rate) |
+| CPU usage        | < 5% (single core at 1Gbps)       |
+| Memory           | < 2MB (for 1000 rules)            |
 
 Optimization tips:
+
 - Consolidate CIDR blocks to minimize rules
 - Place most-matched rules first
 - Use XDP_DRV mode for better performance (requires driver support)
@@ -162,7 +163,13 @@ Optimization tips:
 ## Testing
 
 ```bash
-# Unit tests (requires root)
+# Cross-platform unit tests (run on any OS)
+go test -v ./pkg/enforcer/... -run "TestStub|TestNewEnforcer"
+
+# macOS pf tests (darwin only)
+go test -v ./pkg/enforcer/... -run "TestPF|TestGenerate"
+
+# Linux eBPF tests (requires root on Linux)
 sudo go test -v ./pkg/enforcer/...
 
 # Manual testing
@@ -174,11 +181,13 @@ sudo ip link set dev eth0 xdpgeneric off
 ## Troubleshooting
 
 **BPF verifier errors:**
+
 ```bash
 sudo bpftool prog load pci_segment.o /sys/fs/bpf/test log_level 2
 ```
 
 **XDP attach fails:**
+
 ```bash
 # Check interface support
 ip link show eth0 | grep -i xdp
@@ -191,6 +200,7 @@ grep BPF /boot/config-$(uname -r)
 ```
 
 **No events captured:**
+
 ```bash
 sudo bpftool map list | grep events
 sudo bpftool prog show

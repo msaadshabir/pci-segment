@@ -15,7 +15,7 @@ Automate PCI-DSS network segmentation and reporting with minimal operational ove
 | SELinux/AppArmor profiles                                | Done        |
 | Prometheus metrics endpoint                              | Done        |
 | Health check endpoint (`/healthz`)                       | Done        |
-| Enforcer unit tests                                      | In Progress |
+| Enforcer unit tests                                      | Done        |
 | Integration test suite                                   | In Progress |
 | Daemon mode with systemd service                         | Planned     |
 | Configuration file (`/etc/pci-segment/config.yaml`)      | Planned     |
