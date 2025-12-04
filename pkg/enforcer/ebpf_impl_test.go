@@ -631,8 +631,8 @@ func TestPolicyToRulesEgress(t *testing.T) {
 
 func TestProtoConversionUnknown(t *testing.T) {
 	got := protoToString(200)
-	if got != "UNKNOWN" {
-		t.Errorf("protoToString(200) = %s, want UNKNOWN", got)
+	if got != "proto-200" {
+		t.Errorf("protoToString(200) = %s, want proto-200", got)
 	}
 }
 
