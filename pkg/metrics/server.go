@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -97,11 +98,11 @@ func (s *Server) Start() error {
 
 	go func() {
 		if err := s.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			fmt.Printf("[!] Metrics server error: %v\n", err)
+			log.Error("metrics server error", "error", err)
 		}
 	}()
 
-	fmt.Printf("[OK] Metrics server listening on %s%s\n", s.config.Addr, s.config.Path)
+	log.Info("metrics server started", "addr", s.config.Addr, "path", s.config.Path)
 	return nil
 }
 
@@ -111,12 +112,12 @@ func (s *Server) Stop(ctx context.Context) error {
 		return nil
 	}
 
-	fmt.Println("[...] Shutting down metrics server")
+	log.Info("shutting down metrics server")
 	if err := s.server.Shutdown(ctx); err != nil {
 		return fmt.Errorf("metrics server shutdown failed: %w", err)
 	}
 
-	fmt.Println("[OK] Metrics server stopped")
+	log.Info("metrics server stopped")
 	return nil
 }
 

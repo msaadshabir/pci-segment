@@ -156,9 +156,10 @@ Commands:
   cloud-validate  Check cloud resources for compliance
 
 Global Flags:
-  -f, --file      Policy file(s) (supports globs)
-  -v, --verbose   Detailed output
-  -h, --help      Show help
+  -f, --file           Policy file(s) (supports globs)
+  -v, --verbose        Verbose output (alias for --log-level=debug)
+      --log-level      Log level: debug, info, warn, error (default: info)
+  -h, --help           Show help
 ```
 
 ## Production Readiness

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/msaadshabir/pci-segment/pkg/enforcer"
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/metrics"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/msaadshabir/pci-segment/pkg/security/privilege"
@@ -53,13 +54,9 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	// Create policy engine
 	engine := policy.NewEngine()
 
-	// Load policy file
-	if verbose {
-		fmt.Printf("Loading policy from: %s\n", policyFile)
-	}
+	log.Debug("loading policy", "file", policyFile)
 
 	loadStart := time.Now()
 	if err := engine.LoadFromFile(policyFile); err != nil {
@@ -68,7 +65,7 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 	loadDuration := time.Since(loadStart)
 
 	policies := engine.GetPolicies()
-	fmt.Printf("[OK] Loaded %d polic(ies)\n", len(policies))
+	log.Info("policies loaded", "count", len(policies))
 
 	// Update metrics for policy load
 	if metricsAddr != "" {
@@ -99,11 +96,11 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		if metricsAddr != "" {
 			metrics.PolicyValidationsTotal.WithLabelValues("valid").Inc()
 		}
-		if len(result.Warnings) > 0 && verbose {
-			fmt.Printf("[WARN] Warnings for policy '%s': %v\n", pol.Metadata.Name, result.Warnings)
+		if len(result.Warnings) > 0 {
+			log.Warn("policy has warnings", "policy", pol.Metadata.Name, "warnings", result.Warnings)
 		}
 		if len(result.PCIRequirements) > 0 {
-			fmt.Printf("[OK] Policy '%s' covers: %v\n", pol.Metadata.Name, result.PCIRequirements)
+			log.Info("policy validated", "policy", pol.Metadata.Name, "pci_requirements", result.PCIRequirements)
 		}
 	}
 
@@ -120,13 +117,12 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	// Start enforcement
-	fmt.Println("\n[STARTING] PCI-DSS enforcement...")
+	log.Info("starting PCI-DSS enforcement")
 	if err := enf.Start(); err != nil {
 		return fmt.Errorf("failed to start enforcer: %w", err)
 	}
 
-	fmt.Println("[OK] Enforcement active")
+	log.Info("enforcement active")
 
 	// Update enforcer running metric
 	if metricsAddr != "" {
@@ -147,12 +143,12 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		// Register collectors
 		enforcerCollector := metrics.NewEnforcerCollector(enf)
 		if err := metricsServer.RegisterCollector(enforcerCollector); err != nil {
-			fmt.Printf("[!] Failed to register enforcer collector: %v\n", err)
+			log.Warn("failed to register enforcer collector", "error", err)
 		}
 
 		policyCollector := metrics.NewPolicyCollector(engine)
 		if err := metricsServer.RegisterCollector(policyCollector); err != nil {
-			fmt.Printf("[!] Failed to register policy collector: %v\n", err)
+			log.Warn("failed to register policy collector", "error", err)
 		}
 
 		if err := metricsServer.Start(); err != nil {
@@ -160,19 +156,17 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		}
 	}
 
-	fmt.Println("\nPress Ctrl+C to stop enforcement")
+	log.Info("press Ctrl+C to stop enforcement")
 
-	// Wait for interrupt
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 	<-sigChan
 
-	// Stop metrics server
 	if metricsServer != nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if err := metricsServer.Stop(ctx); err != nil {
-			fmt.Printf("[!] Failed to stop metrics server: %v\n", err)
+			log.Warn("failed to stop metrics server", "error", err)
 		}
 	}
 
@@ -181,12 +175,11 @@ func runEnforce(_ *cobra.Command, _ []string) error {
 		metrics.EnforcerRunning.Set(0)
 	}
 
-	// Stop enforcement
-	fmt.Println("\n\nStopping enforcement...")
+	log.Info("stopping enforcement")
 	if err := enf.Stop(); err != nil {
 		return fmt.Errorf("failed to stop enforcer: %w", err)
 	}
 
-	fmt.Println("[OK] Enforcement stopped")
+	log.Info("enforcement stopped")
 	return nil
 }

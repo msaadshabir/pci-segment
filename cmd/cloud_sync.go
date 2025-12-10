@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/msaadshabir/pci-segment/pkg/cloud"
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 	yaml "gopkg.in/yaml.v3"
@@ -40,45 +41,37 @@ func init() {
 }
 
 func runCloudSync(_ *cobra.Command, _ []string) error {
-	// Load cloud configuration
-	if verbose {
-		fmt.Printf("Loading cloud configuration from: %s\n", cloudConfigFile)
-	}
+	log.Debug("loading cloud configuration", "file", cloudConfigFile)
 
 	cloudCfg, err := loadCloudConfig(cloudConfigFile)
 	if err != nil {
 		return fmt.Errorf("failed to load cloud config: %w", err)
 	}
 
-	// Override dry-run flag if specified
 	if dryRun {
 		cloudCfg.DryRun = true
 	}
 
-	// Load policy engine
 	engine := policy.NewEngine()
 
-	if verbose {
-		fmt.Printf("Loading policies from: %s\n", policyFile)
-	}
+	log.Debug("loading policies", "file", policyFile)
 
 	if err := engine.LoadFromFile(policyFile); err != nil {
 		return fmt.Errorf("failed to load policy: %w", err)
 	}
 
 	policies := engine.GetPolicies()
-	fmt.Printf("[OK] Loaded %d polic(ies)\n", len(policies))
+	log.Info("policies loaded", "count", len(policies))
 
-	// Validate policies first
-	fmt.Println("\n[VALIDATING] Policies...")
+	log.Info("validating policies")
 	allValid := true
 	for i, pol := range policies {
 		result := engine.Validate(&policies[i])
 		if !result.Valid {
-			fmt.Printf("[!] Policy '%s' is invalid: %v\n", pol.Metadata.Name, result.Errors)
+			log.Error("policy invalid", "policy", pol.Metadata.Name, "errors", result.Errors)
 			allValid = false
 		} else {
-			fmt.Printf("[OK] Policy '%s' is valid\n", pol.Metadata.Name)
+			log.Info("policy valid", "policy", pol.Metadata.Name)
 		}
 	}
 
@@ -86,19 +79,17 @@ func runCloudSync(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("validation failed: one or more policies are invalid")
 	}
 
-	// Create cloud integrator
-	fmt.Printf("\n[CONNECTING] to %s %s...\n", cloudCfg.Provider, cloudCfg.Region)
+	log.Info("connecting to cloud provider", "provider", cloudCfg.Provider, "region", cloudCfg.Region)
 	integrator, err := cloud.NewIntegrator(cloudCfg)
 	if err != nil {
 		return fmt.Errorf("failed to create cloud integrator: %w", err)
 	}
 	defer integrator.Close()
 
-	// Sync policies
 	if cloudCfg.DryRun {
-		fmt.Println("\n[DRY RUN] Showing changes without applying...")
+		log.Info("dry run mode enabled")
 	} else {
-		fmt.Println("\n[SYNCING] Policies to cloud...")
+		log.Info("syncing policies to cloud")
 	}
 
 	syncResult, err := integrator.Sync(policies)
@@ -106,37 +97,29 @@ func runCloudSync(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("sync failed: %w", err)
 	}
 
-	// Display results
-	fmt.Printf("\n[SYNC RESULTS]\n")
-	fmt.Printf("   Provider: %s\n", syncResult.Provider)
-	fmt.Printf("   Dry Run: %v\n", syncResult.DryRun)
-	fmt.Printf("   Resources Added: %d\n", syncResult.ResourcesAdded)
-	fmt.Printf("   Resources Updated: %d\n", syncResult.ResourcesUpdated)
-	fmt.Printf("   Resources Deleted: %d\n", syncResult.ResourcesDeleted)
+	log.Info("sync complete",
+		"provider", syncResult.Provider,
+		"dry_run", syncResult.DryRun,
+		"added", syncResult.ResourcesAdded,
+		"updated", syncResult.ResourcesUpdated,
+		"deleted", syncResult.ResourcesDeleted)
 
-	if len(syncResult.Changes) > 0 {
-		fmt.Printf("\n   Changes:\n")
-		for _, change := range syncResult.Changes {
-			status := "[OK]"
-			if !change.Success {
-				status = "[X]"
-			}
-			fmt.Printf("   %s %s: %s - %s\n", status, change.Operation, change.ResourceName, change.Details)
-			if change.Error != "" {
-				fmt.Printf("       Error: %s\n", change.Error)
-			}
+	for _, change := range syncResult.Changes {
+		if change.Success {
+			log.Info("change applied", "operation", change.Operation, "resource", change.ResourceName, "details", change.Details)
+		} else {
+			log.Error("change failed", "operation", change.Operation, "resource", change.ResourceName, "error", change.Error)
 		}
 	}
 
 	if len(syncResult.Errors) > 0 {
-		fmt.Printf("\n   Errors:\n")
-		for _, err := range syncResult.Errors {
-			fmt.Printf("   [!] %s\n", err)
+		for _, e := range syncResult.Errors {
+			log.Error("sync error", "error", e)
 		}
 		return fmt.Errorf("sync completed with %d error(s)", len(syncResult.Errors))
 	}
 
-	fmt.Printf("\n[OK] Cloud sync complete\n")
+	log.Info("cloud sync complete")
 	return nil
 }
 

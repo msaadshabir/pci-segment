@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/msaadshabir/pci-segment/pkg/cloud"
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 )
@@ -37,48 +38,37 @@ func init() {
 }
 
 func runCloudValidate(_ *cobra.Command, _ []string) error {
-	// Load cloud configuration
-	if verbose {
-		fmt.Printf("Loading cloud configuration from: %s\n", cloudConfigFile)
-	}
+	log.Debug("loading cloud configuration", "file", cloudConfigFile)
 
 	cloudCfg, err := loadCloudConfig(cloudConfigFile)
 	if err != nil {
 		return fmt.Errorf("failed to load cloud config: %w", err)
 	}
 
-	// Load policy engine
 	engine := policy.NewEngine()
 
-	if verbose {
-		fmt.Printf("Loading policies from: %s\n", policyFile)
-	}
+	log.Debug("loading policies", "file", policyFile)
 
 	if err := engine.LoadFromFile(policyFile); err != nil {
 		return fmt.Errorf("failed to load policy: %w", err)
 	}
 
 	policies := engine.GetPolicies()
-	if verbose {
-		fmt.Printf("[OK] Loaded %d polic(ies)\n", len(policies))
-	}
+	log.Debug("policies loaded", "count", len(policies))
 
-	// Create cloud integrator
-	fmt.Printf("[CONNECTING] to %s %s...\n", cloudCfg.Provider, cloudCfg.Region)
+	log.Info("connecting to cloud provider", "provider", cloudCfg.Provider, "region", cloudCfg.Region)
 	integrator, err := cloud.NewIntegrator(cloudCfg)
 	if err != nil {
 		return fmt.Errorf("failed to create cloud integrator: %w", err)
 	}
 	defer integrator.Close()
 
-	// Validate cloud resources
-	fmt.Println("\n[VALIDATING] Cloud resources...")
+	log.Info("validating cloud resources")
 	report, err := integrator.Validate(policies)
 	if err != nil {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-	// Output results
 	if outputFormat == "json" {
 		return outputJSON(report)
 	}
@@ -87,41 +77,39 @@ func runCloudValidate(_ *cobra.Command, _ []string) error {
 }
 
 func outputText(report *cloud.ValidationReport) error {
-	fmt.Printf("\n[VALIDATION REPORT]\n")
-	fmt.Printf("   Provider: %s\n", report.Provider)
-	fmt.Printf("   Timestamp: %s\n", report.Timestamp.Format("2006-01-02 15:04:05"))
-	fmt.Printf("   Resources Checked: %d\n", report.Resources)
-
 	if report.Compliant {
-		fmt.Printf("   Status: [OK] COMPLIANT\n")
+		log.Info("validation complete",
+			"provider", report.Provider,
+			"resources", report.Resources,
+			"status", "compliant")
 	} else {
-		fmt.Printf("   Status: [!] NON-COMPLIANT\n")
+		log.Warn("validation complete",
+			"provider", report.Provider,
+			"resources", report.Resources,
+			"status", "non-compliant",
+			"violations", len(report.Violations))
 	}
 
-	if len(report.Violations) > 0 {
-		fmt.Printf("\n   Violations (%d):\n", len(report.Violations))
-		for i, v := range report.Violations {
-			fmt.Printf("\n   %d. %s - %s\n", i+1, v.ResourceName, v.Severity)
-			fmt.Printf("      Resource ID: %s\n", v.ResourceID)
-			fmt.Printf("      Policy: %s\n", v.PolicyName)
-			fmt.Printf("      Issue: %s\n", v.Description)
-			fmt.Printf("      Fix: %s\n", v.Remediation)
-		}
+	for i, v := range report.Violations {
+		log.Error("violation found",
+			"num", i+1,
+			"resource", v.ResourceName,
+			"resource_id", v.ResourceID,
+			"severity", v.Severity,
+			"policy", v.PolicyName,
+			"issue", v.Description,
+			"fix", v.Remediation)
 	}
 
-	if len(report.Warnings) > 0 {
-		fmt.Printf("\n   Warnings:\n")
-		for _, w := range report.Warnings {
-			fmt.Printf("   [!] %s\n", w)
-		}
+	for _, w := range report.Warnings {
+		log.Warn("validation warning", "message", w)
 	}
 
-	fmt.Println()
 	if !report.Compliant {
 		return fmt.Errorf("cloud resources are not compliant with PCI-DSS policies")
 	}
 
-	fmt.Println("[OK] All cloud resources are compliant")
+	log.Info("all cloud resources are compliant")
 	return nil
 }
 

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/syndtr/gocapability/capability"
 	"golang.org/x/sys/unix"
 )
@@ -17,7 +18,7 @@ import (
 func Ensure(cfg Config) error {
 	if SkipRequested() {
 		if os.Geteuid() == 0 {
-			fmt.Println("[WARN] Privilege drop skipped via PCI_SEGMENT_SKIP_PRIVILEGE_DROP; running as root")
+			log.Warn("privilege drop skipped via PCI_SEGMENT_SKIP_PRIVILEGE_DROP; running as root")
 		}
 		return nil
 	}
@@ -75,14 +76,13 @@ func Ensure(cfg Config) error {
 		return fmt.Errorf("privilege: %w", err)
 	}
 
-	// Log MAC status for audit trail
 	LogMACStatus()
 
 	if os.Geteuid() == 0 {
 		return fmt.Errorf("privilege: expected to run as non-root after drop, still uid=0")
 	}
 
-	fmt.Printf("[HARDENING] Running as %s:%s with restricted capabilities\n", cfg.TargetUser, cfg.TargetGroup)
+	log.Info("hardening enabled", "user", cfg.TargetUser, "group", cfg.TargetGroup)
 	return nil
 }
 

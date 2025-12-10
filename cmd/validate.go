@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/spf13/cobra"
 )
@@ -25,13 +26,9 @@ func init() {
 }
 
 func runValidate(_ *cobra.Command, _ []string) error {
-	// Create policy engine
 	engine := policy.NewEngine()
 
-	// Load policy file
-	if verbose {
-		fmt.Printf("Validating policy: %s\n", policyFile)
-	}
+	log.Debug("validating policy", "file", policyFile)
 
 	if err := engine.LoadFromFile(policyFile); err != nil {
 		return fmt.Errorf("validation failed: %w", err)
@@ -43,39 +40,28 @@ func runValidate(_ *cobra.Command, _ []string) error {
 	for _, pol := range policies {
 		result := engine.Validate(&pol)
 
-		fmt.Printf("\n[POLICY] %s\n", pol.Metadata.Name)
-		fmt.Printf("   API Version: %s\n", pol.APIVersion)
-		fmt.Printf("   Kind: %s\n", pol.Kind)
-
-		if len(result.PCIRequirements) > 0 {
-			fmt.Printf("   PCI-DSS: %v\n", result.PCIRequirements)
-		}
-
 		if result.Valid {
-			fmt.Println("   Status: [OK] VALID")
+			log.Info("policy valid",
+				"policy", pol.Metadata.Name,
+				"api_version", pol.APIVersion,
+				"kind", pol.Kind,
+				"pci_requirements", result.PCIRequirements)
 		} else {
-			fmt.Println("   Status: [X] INVALID")
+			log.Error("policy invalid",
+				"policy", pol.Metadata.Name,
+				"api_version", pol.APIVersion,
+				"kind", pol.Kind,
+				"errors", result.Errors)
 			allValid = false
 		}
 
-		if len(result.Errors) > 0 {
-			fmt.Println("   Errors:")
-			for _, err := range result.Errors {
-				fmt.Printf("     - %s\n", err)
-			}
-		}
-
 		if len(result.Warnings) > 0 {
-			fmt.Println("   Warnings:")
-			for _, warn := range result.Warnings {
-				fmt.Printf("     [!] %s\n", warn)
-			}
+			log.Warn("policy has warnings", "policy", pol.Metadata.Name, "warnings", result.Warnings)
 		}
 	}
 
-	fmt.Println()
 	if allValid {
-		fmt.Println("[OK] All policies are valid and PCI-DSS compliant")
+		log.Info("all policies valid and PCI-DSS compliant")
 		return nil
 	}
 

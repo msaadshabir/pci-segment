@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 	"github.com/msaadshabir/pci-segment/pkg/reporter"
 	"github.com/spf13/cobra"
@@ -34,20 +35,16 @@ func init() {
 }
 
 func runReport(_ *cobra.Command, _ []string) error {
-	// Create policy engine
 	engine := policy.NewEngine()
 
-	// Load policy file
-	if verbose {
-		fmt.Printf("Loading policies from: %s\n", policyFile)
-	}
+	log.Debug("loading policies", "file", policyFile)
 
 	if err := engine.LoadFromFile(policyFile); err != nil {
 		return fmt.Errorf("failed to load policy: %w", err)
 	}
 
 	policies := engine.GetPolicies()
-	fmt.Printf("[OK] Loaded %d polic(ies)\n", len(policies))
+	log.Info("policies loaded", "count", len(policies))
 
 	// Create some sample enforcement events for demonstration
 	sampleEvents := []policy.EnforcementEvent{
@@ -83,13 +80,11 @@ func runReport(_ *cobra.Command, _ []string) error {
 		},
 	}
 
-	// Create reporter
 	rep := reporter.NewReporter()
 	rep.SetPolicies(policies)
 	rep.SetEvents(sampleEvents)
 
-	// Generate report
-	fmt.Printf("\n[GENERATING] %s compliance report...\n", reportFormat)
+	log.Info("generating compliance report", "format", reportFormat)
 
 	var err error
 	switch reportFormat {
@@ -105,15 +100,14 @@ func runReport(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to generate report: %w", err)
 	}
 
-	fmt.Printf("[OK] Report generated: %s\n", outputFile)
-	fmt.Println("\n[REPORT SUMMARY]")
-
 	report := rep.GenerateReport()
-	fmt.Printf("   Status: %s\n", report.ComplianceStatus)
-	fmt.Printf("   Policies: %d\n", report.Summary.TotalPolicies)
-	fmt.Printf("   CDE Servers: %d\n", report.Summary.CDEServers)
-	fmt.Printf("   Blocked Events: %d\n", report.Summary.BlockedEvents)
-	fmt.Printf("   Allowed Events: %d\n", report.Summary.AllowedEvents)
+	log.Info("report generated",
+		"file", outputFile,
+		"status", report.ComplianceStatus,
+		"policies", report.Summary.TotalPolicies,
+		"cde_servers", report.Summary.CDEServers,
+		"blocked_events", report.Summary.BlockedEvents,
+		"allowed_events", report.Summary.AllowedEvents)
 
 	return nil
 }

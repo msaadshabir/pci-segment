@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/msaadshabir/pci-segment/pkg/log"
 )
 
 // MACStatus represents the current Mandatory Access Control state.
@@ -115,8 +117,7 @@ func verifySELinux(expectedDomain string, status *MACStatus) error {
 	}
 
 	if !status.SELinuxEnforcing {
-		// Warn but don't fail in permissive mode
-		fmt.Printf("[WARN] SELinux is in permissive mode; enforcement not active\n")
+		log.Warn("SELinux is in permissive mode; enforcement not active")
 	}
 
 	// Extract domain from full context (user:role:type:level)
@@ -126,7 +127,7 @@ func verifySELinux(expectedDomain string, status *MACStatus) error {
 		return fmt.Errorf("mac: running in selinux domain %q, expected %q (see docs/HARDENING.md)", domain, expectedDomain)
 	}
 
-	fmt.Printf("[HARDENING] SELinux domain verified: %s\n", domain)
+	log.Info("SELinux domain verified", "domain", domain)
 	return nil
 }
 
@@ -145,10 +146,10 @@ func verifyAppArmor(expectedProfile string, status *MACStatus) error {
 	}
 
 	if status.AppArmorMode == "complain" {
-		fmt.Printf("[WARN] AppArmor profile %s is in complain mode; violations logged but not blocked\n", expectedProfile)
+		log.Warn("AppArmor profile in complain mode; violations logged but not blocked", "profile", expectedProfile)
 	}
 
-	fmt.Printf("[HARDENING] AppArmor profile verified: %s (%s)\n", status.AppArmorProfile, status.AppArmorMode)
+	log.Info("AppArmor profile verified", "profile", status.AppArmorProfile, "mode", status.AppArmorMode)
 	return nil
 }
 
@@ -228,12 +229,12 @@ func readAppArmorProfile() (profile string, mode string, err error) {
 func LogMACStatus() {
 	status, err := DetectMAC()
 	if err != nil {
-		fmt.Printf("[WARN] Could not detect MAC status: %v\n", err)
+		log.Warn("could not detect MAC status", "error", err)
 		return
 	}
 
 	if len(status.ActiveLSMs) > 0 {
-		fmt.Printf("[MAC] Active LSMs: %s\n", strings.Join(status.ActiveLSMs, ", "))
+		log.Info("active LSMs detected", "lsms", strings.Join(status.ActiveLSMs, ", "))
 	}
 
 	if status.SELinuxEnabled {
@@ -241,14 +242,14 @@ func LogMACStatus() {
 		if status.SELinuxEnforcing {
 			mode = "enforcing"
 		}
-		fmt.Printf("[MAC] SELinux: %s, domain=%s\n", mode, status.SELinuxDomain)
+		log.Info("SELinux status", "mode", mode, "domain", status.SELinuxDomain)
 	}
 
 	if status.AppArmorEnabled {
-		fmt.Printf("[MAC] AppArmor: profile=%s, mode=%s\n", status.AppArmorProfile, status.AppArmorMode)
+		log.Info("AppArmor status", "profile", status.AppArmorProfile, "mode", status.AppArmorMode)
 	}
 
 	if !status.SELinuxEnabled && !status.AppArmorEnabled {
-		fmt.Printf("[MAC] No MAC enforcement active (SELinux/AppArmor not detected)\n")
+		log.Info("no MAC enforcement active (SELinux/AppArmor not detected)")
 	}
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/cilium/ebpf/ringbuf"
 
 	"github.com/msaadshabir/pci-segment/pkg/audit"
+	"github.com/msaadshabir/pci-segment/pkg/log"
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
@@ -418,7 +419,7 @@ func (e *EBPFEnforcerV2) processEvents() {
 			// Log to persistent audit storage
 			if e.auditLogger != nil {
 				if err := e.auditLogger.Log(evt); err != nil {
-					fmt.Fprintf(os.Stderr, "ERROR: Failed to log audit event: %v\n", err)
+					log.Error("failed to log audit event", "error", err)
 				}
 			}
 
