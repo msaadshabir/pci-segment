@@ -47,6 +47,10 @@ func NewLogger(cfg Config) (*FileLogger, error) {
 		return nil, fmt.Errorf("invalid config: %w", err)
 	}
 
+	if cfg.RotateCheckInterval <= 0 {
+		cfg.RotateCheckInterval = defaultRotateCheckInterval
+	}
+
 	// Create log directory if it doesn't exist
 	logDir := filepath.Dir(cfg.LogFilePath)
 	if err := os.MkdirAll(logDir, 0750); err != nil {
@@ -302,13 +306,8 @@ func (l *FileLogger) closeLogFile() error {
 func (l *FileLogger) checkRotation() error {
 	now := time.Now()
 
-	interval := l.config.RotateCheckInterval
-	if interval <= 0 {
-		interval = defaultRotateCheckInterval
-	}
-
 	// Don't check too frequently (short interval to satisfy test expectations)
-	if now.Sub(l.lastRotateCheck) < interval {
+	if now.Sub(l.lastRotateCheck) < l.config.RotateCheckInterval {
 		return nil
 	}
 	l.lastRotateCheck = now
@@ -317,7 +316,7 @@ func (l *FileLogger) checkRotation() error {
 	// Refresh file size before making rotation decision
 	stat, err := l.file.Stat()
 	if err != nil {
-		return fmt.Errorf("failed to stat log file: %w", err)
+		return fmt.Errorf("failed to stat log file %s: %w", l.config.LogFilePath, err)
 	}
 	l.stats.CurrentFileSize = stat.Size()
 

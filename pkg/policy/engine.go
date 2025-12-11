@@ -2,6 +2,7 @@ package policy
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -142,6 +143,7 @@ func (e *Engine) GetPolicyByName(name string) *Policy {
 	// (primarily used in tests or manual setups)
 	for i := range e.policies {
 		if e.policies[i].Metadata.Name == name {
+			log.Printf("policy cache miss for %s; rebuilding from slice", name)
 			return &e.policies[i]
 		}
 	}

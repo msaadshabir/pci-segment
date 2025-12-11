@@ -13,6 +13,8 @@ import (
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
+const defaultDenyPriority int32 = 4096
+
 // AzureIntegrator implements CloudIntegrator for Azure
 type AzureIntegrator struct {
 	client *armnetwork.SecurityGroupsClient
@@ -211,8 +213,8 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 
 	// Ensure default deny priority is after generated rules (or at least the minimum expected value)
 	defaultPriority := priority
-	if defaultPriority < int32(4096) {
-		defaultPriority = int32(4096)
+	if defaultPriority < defaultDenyPriority {
+		defaultPriority = defaultDenyPriority
 	}
 
 	// Add default deny rule (lowest priority)
