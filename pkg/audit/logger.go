@@ -321,7 +321,7 @@ func (l *FileLogger) checkRotation() error {
 	}
 	l.stats.CurrentFileSize = stat.Size()
 
-	// Use tracked size first to avoid repeated stat calls
+	// Use the refreshed size to decide whether rotation is needed
 	needsRotation := l.stats.CurrentFileSize >= sizeLimit
 
 	// Check time-based rotation (daily) - this is fast
