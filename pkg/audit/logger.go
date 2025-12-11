@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+const (
+	// minEventsForSizeCheck is the minimum number of events before checking file size for rotation
+	minEventsForSizeCheck = 1000
+)
+
 // FileLogger implements persistent audit logging with tamper detection
 type FileLogger struct {
 	config Config
@@ -33,6 +38,9 @@ type FileLogger struct {
 
 	// Closed flag
 	closed bool
+
+	// Background task management
+	bgTasks sync.WaitGroup
 }
 
 // NewLogger creates a new persistent audit logger
@@ -191,11 +199,21 @@ func (l *FileLogger) Rotate() error {
 // Close closes the logger and flushes pending writes
 func (l *FileLogger) Close() error {
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
+	
 	if l.closed {
+		l.mu.Unlock()
 		return nil
 	}
+	
+	l.closed = true
+	l.mu.Unlock()
+
+	// Wait for all background tasks to complete (outside mutex to avoid deadlock)
+	l.bgTasks.Wait()
+
+	// Reacquire lock for cleanup operations
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	// Flush any pending writes
 	if l.writer != nil {
@@ -231,7 +249,6 @@ func (l *FileLogger) Close() error {
 		}
 	}
 
-	l.closed = true
 	return nil
 }
 
@@ -288,21 +305,24 @@ func (l *FileLogger) closeLogFile() error {
 func (l *FileLogger) checkRotation() error {
 	now := time.Now()
 
-	// Don't check too frequently (every 5 seconds is enough)
-	if now.Sub(l.lastRotateCheck) < 5*time.Second {
+	// Don't check too frequently (every 30 seconds is enough for most use cases)
+	if now.Sub(l.lastRotateCheck) < 30*time.Second {
 		return nil
 	}
 	l.lastRotateCheck = now
 
 	needsRotation := false
 
-	// Check size-based rotation
-	if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
-		needsRotation = true
+	// Check size-based rotation (only if we're close to the limit)
+	// Skip stat check if we know we're not close yet
+	if l.stats.EventsLastRotate > minEventsForSizeCheck {
+		if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
+			needsRotation = true
+		}
 	}
 
-	// Check time-based rotation (daily)
-	if l.config.RotateDaily {
+	// Check time-based rotation (daily) - this is fast
+	if !needsRotation && l.config.RotateDaily {
 		lastRotateDate := l.stats.LastRotation.Truncate(24 * time.Hour)
 		currentDate := now.Truncate(24 * time.Hour)
 		if currentDate.After(lastRotateDate) {
@@ -319,6 +339,11 @@ func (l *FileLogger) checkRotation() error {
 
 // performRotation performs the actual log rotation
 func (l *FileLogger) performRotation() error {
+	// Check if logger is closed (prevent race condition with Close())
+	if l.closed {
+		return fmt.Errorf("logger is closed")
+	}
+
 	// Flush and close current file
 	if err := l.writer.Flush(); err != nil {
 		return fmt.Errorf("failed to flush before rotation: %w", err)
@@ -349,9 +374,11 @@ func (l *FileLogger) performRotation() error {
 		return fmt.Errorf("failed to rename log file: %w", err)
 	}
 
-	// Compress rotated file if enabled
+	// Compress rotated file if enabled (note: called while holding mutex from LogBatch)
 	if l.config.EnableCompression {
+		l.bgTasks.Add(1)
 		go func() {
+			defer l.bgTasks.Done()
 			if err := compressFile(rotatedPath); err != nil {
 				fmt.Fprintf(os.Stderr, "WARNING: failed to compress rotated log: %v\n", err)
 			}
@@ -359,7 +386,9 @@ func (l *FileLogger) performRotation() error {
 	}
 
 	// Clean up old rotated files
+	l.bgTasks.Add(1)
 	go func() {
+		defer l.bgTasks.Done()
 		if err := l.cleanupOldLogs(); err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
 		}

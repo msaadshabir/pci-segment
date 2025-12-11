@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -111,10 +112,59 @@ func (a *AWSIntegrator) syncPolicy(pol *policy.Policy, result *SyncResult) error
 		}
 	}
 
+	// Process VPCs concurrently for better performance
+	if len(vpcIDs) > 1 {
+		return a.syncSecurityGroupsConcurrent(vpcIDs, sgName, sgDescription, pol, result)
+	}
+
+	// Single VPC - no need for concurrency overhead
 	for _, vpcID := range vpcIDs {
 		if err := a.syncSecurityGroup(vpcID, sgName, sgDescription, pol, result); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// syncSecurityGroupsConcurrent syncs to multiple VPCs concurrently
+func (a *AWSIntegrator) syncSecurityGroupsConcurrent(vpcIDs []string, sgName, sgDescription string, pol *policy.Policy, result *SyncResult) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(vpcIDs))
+	var resultMu sync.Mutex
+
+	for _, vpcID := range vpcIDs {
+		wg.Add(1)
+		go func(vpc string) {
+			defer wg.Done()
+			
+			// Create a temporary result for this goroutine
+			tempResult := &SyncResult{
+				Changes: make([]Change, 0),
+				Errors:  make([]string, 0),
+			}
+			
+			if err := a.syncSecurityGroup(vpc, sgName, sgDescription, pol, tempResult); err != nil {
+				errChan <- fmt.Errorf("VPC %s: %w", vpc, err)
+				return
+			}
+			
+			// Merge results safely
+			resultMu.Lock()
+			result.Changes = append(result.Changes, tempResult.Changes...)
+			result.Errors = append(result.Errors, tempResult.Errors...)
+			result.ResourcesAdded += tempResult.ResourcesAdded
+			result.ResourcesUpdated += tempResult.ResourcesUpdated
+			resultMu.Unlock()
+		}(vpcID)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Return first error if any
+	for err := range errChan {
+		return err
 	}
 
 	return nil
@@ -277,43 +327,21 @@ func (a *AWSIntegrator) addSecurityGroupRules(sgID string, pol *policy.Policy) e
 
 // buildIngressPermissions converts policy ingress rules to AWS permissions
 func (a *AWSIntegrator) buildIngressPermissions(rules []policy.Rule) []types.IpPermission {
-	perms := make([]types.IpPermission, 0)
-
-	for _, rule := range rules {
-		for _, port := range rule.Ports {
-			// Validate port range to prevent integer overflow
-			if port.Port < 0 || port.Port > 65535 {
-				continue // Skip invalid ports
-			}
-
-			perm := types.IpPermission{
-				IpProtocol: aws.String(strings.ToLower(port.Protocol)),
-				FromPort:   aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
-				ToPort:     aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
-			}
-
-			// Add CIDR blocks from rule
-			for _, peer := range rule.From {
-				if peer.IPBlock != nil {
-					perm.IpRanges = append(perm.IpRanges, types.IpRange{
-						CidrIp:      aws.String(peer.IPBlock.CIDR),
-						Description: aws.String("PCI-DSS Policy Ingress"),
-					})
-				}
-			}
-
-			if len(perm.IpRanges) > 0 {
-				perms = append(perms, perm)
-			}
-		}
-	}
-
-	return perms
+	return a.buildPermissions(rules, true)
 }
 
 // buildEgressPermissions converts policy egress rules to AWS permissions
 func (a *AWSIntegrator) buildEgressPermissions(rules []policy.Rule) []types.IpPermission {
+	return a.buildPermissions(rules, false)
+}
+
+// buildPermissions converts policy rules to AWS permissions (DRY helper)
+func (a *AWSIntegrator) buildPermissions(rules []policy.Rule, isIngress bool) []types.IpPermission {
 	perms := make([]types.IpPermission, 0)
+	description := "PCI-DSS Policy Egress"
+	if isIngress {
+		description = "PCI-DSS Policy Ingress"
+	}
 
 	for _, rule := range rules {
 		for _, port := range rule.Ports {
@@ -329,11 +357,15 @@ func (a *AWSIntegrator) buildEgressPermissions(rules []policy.Rule) []types.IpPe
 			}
 
 			// Add CIDR blocks from rule
-			for _, peer := range rule.To {
+			peers := rule.To
+			if isIngress {
+				peers = rule.From
+			}
+			for _, peer := range peers {
 				if peer.IPBlock != nil {
 					perm.IpRanges = append(perm.IpRanges, types.IpRange{
 						CidrIp:      aws.String(peer.IPBlock.CIDR),
-						Description: aws.String("PCI-DSS Policy Egress"),
+						Description: aws.String(description),
 					})
 				}
 			}

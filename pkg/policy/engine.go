@@ -12,13 +12,17 @@ import (
 
 // Engine handles policy parsing and validation
 type Engine struct {
-	policies []Policy
+	policies   []Policy
+	policyMap  map[string]Policy // Index for O(1) policy lookup by name (stored by value for stability)
+	cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 
 // NewEngine creates a new policy engine
 func NewEngine() *Engine {
 	return &Engine{
-		policies: make([]Policy, 0),
+		policies:  make([]Policy, 0),
+		policyMap: make(map[string]Policy),
+		cidrCache: make(map[string]*net.IPNet),
 	}
 }
 
@@ -43,6 +47,8 @@ func (e *Engine) LoadFromFile(filename string) error {
 	}
 
 	e.policies = append(e.policies, policy)
+	// Update index for fast lookup - store by value for stability
+	e.policyMap[policy.Metadata.Name] = policy
 	return nil
 }
 
@@ -100,10 +106,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 
 	// Validate CDE labeling (PCI Requirement 1.2)
 	if isCDEPolicy(policy) {
-		if !hasProperCDELabel(policy) {
-			result.Errors = append(result.Errors, "CDE policy must have 'pci-env: cde' label in podSelector")
-			result.Valid = false
-		}
+		// isCDEPolicy already validates that pci-env label exists and equals 'cde'
 
 		// Check for overly permissive rules (PCI Requirement 1.3)
 		if hasWildcardAccess(policy) {
@@ -117,7 +120,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 		}
 
 		// Check for specific payment processor IPs
-		if !hasSpecificIPs(policy) {
+		if !e.hasSpecificIPs(policy) {
 			result.Warnings = append(result.Warnings, "consider using specific IP ranges instead of broad CIDRs for better segmentation")
 		}
 	}
@@ -130,26 +133,16 @@ func (e *Engine) GetPolicies() []Policy {
 	return e.policies
 }
 
-// GetPolicyByName returns a policy by name
+// GetPolicyByName returns a policy by name using O(1) map lookup
 func (e *Engine) GetPolicyByName(name string) *Policy {
-	for _, p := range e.policies {
-		if p.Metadata.Name == name {
-			return &p
-		}
+	if policy, ok := e.policyMap[name]; ok {
+		return &policy
 	}
 	return nil
 }
 
 // isCDEPolicy checks if policy targets CDE environment
 func isCDEPolicy(policy *Policy) bool {
-	if env, ok := policy.Spec.PodSelector.MatchLabels["pci-env"]; ok {
-		return env == "cde"
-	}
-	return false
-}
-
-// hasProperCDELabel checks for proper CDE labeling
-func hasProperCDELabel(policy *Policy) bool {
 	if env, ok := policy.Spec.PodSelector.MatchLabels["pci-env"]; ok {
 		return env == "cde"
 	}
@@ -189,11 +182,11 @@ func isWildcardCIDR(cidr string) bool {
 }
 
 // hasSpecificIPs checks if policy uses specific IPs vs broad ranges
-func hasSpecificIPs(policy *Policy) bool {
+func (e *Engine) hasSpecificIPs(policy *Policy) bool {
 	for _, rule := range policy.Spec.Egress {
 		for _, peer := range rule.To {
 			if peer.IPBlock != nil {
-				_, ipNet, err := net.ParseCIDR(peer.IPBlock.CIDR)
+				ipNet, err := e.parseCIDR(peer.IPBlock.CIDR)
 				if err != nil {
 					continue
 				}
@@ -272,6 +265,23 @@ func matchesRule(rule *Rule, ip string, port int, protocol string) bool {
 	}
 
 	return false
+}
+
+// parseCIDR parses a CIDR with caching for performance
+func (e *Engine) parseCIDR(cidr string) (*net.IPNet, error) {
+	// Check cache first
+	if ipNet, ok := e.cidrCache[cidr]; ok {
+		return ipNet, nil
+	}
+
+	// Parse and cache
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	e.cidrCache[cidr] = ipNet
+	return ipNet, nil
 }
 
 // ipInCIDR checks if IP is in CIDR range
