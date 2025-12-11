@@ -68,18 +68,22 @@ type Config struct {
 
 	// BufferSize is the size of the write buffer in bytes (default: 4KB)
 	BufferSize int `yaml:"buffer_size" json:"buffer_size"`
+
+	// RotateCheckInterval controls how frequently rotation checks run
+	RotateCheckInterval time.Duration `yaml:"rotate_check_interval" json:"rotate_check_interval"`
 }
 
 // DefaultConfig returns PCI-DSS compliant default configuration
 func DefaultConfig() Config {
 	return Config{
-		LogFilePath:       "/var/log/pci-segment/audit.log",
-		MaxFileSizeMB:     100,
-		RotateDaily:       true,
-		RetentionDays:     90,
-		ChecksumDBPath:    "/var/lib/pci-segment/checksums.db",
-		FileMode:          0600,
-		EnableCompression: true,
-		BufferSize:        4096,
+		LogFilePath:         "/var/log/pci-segment/audit.log",
+		MaxFileSizeMB:       100,
+		RotateDaily:         true,
+		RetentionDays:       90,
+		ChecksumDBPath:      "/var/lib/pci-segment/checksums.db",
+		FileMode:            0600,
+		EnableCompression:   true,
+		BufferSize:          4096,
+		RotateCheckInterval: 5 * time.Second,
 	}
 }

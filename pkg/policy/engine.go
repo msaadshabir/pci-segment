@@ -141,7 +141,6 @@ func (e *Engine) GetPolicyByName(name string) *Policy {
 	// Fallback to linear scan to handle policies added without updating the index
 	for i := range e.policies {
 		if e.policies[i].Metadata.Name == name {
-			e.policyMap[name] = e.policies[i]
 			return &e.policies[i]
 		}
 	}
