@@ -207,13 +207,19 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 	priority = a.buildDirectionalRules(&rules, pol.Spec.Ingress, priority, true, "ingress")
 
 	// Add egress rules
-	a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
+	priority = a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
+
+	// Ensure default deny priority is after generated rules (or at least the minimum expected value)
+	defaultPriority := priority
+	if defaultPriority < 4096 {
+		defaultPriority = 4096
+	}
 
 	// Add default deny rule (lowest priority)
 	rules = append(rules, &armnetwork.SecurityRule{
 		Name: to.Ptr("default-deny-all"),
 		Properties: &armnetwork.SecurityRulePropertiesFormat{
-			Priority:                 to.Ptr(int32(4096)),
+			Priority:                 to.Ptr(defaultPriority),
 			Direction:                to.Ptr(armnetwork.SecurityRuleDirectionInbound),
 			Access:                   to.Ptr(armnetwork.SecurityRuleAccessDeny),
 			Protocol:                 to.Ptr(armnetwork.SecurityRuleProtocolAsterisk),
