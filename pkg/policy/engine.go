@@ -12,13 +12,17 @@ import (
 
 // Engine handles policy parsing and validation
 type Engine struct {
-	policies []Policy
+	policies   []Policy
+	policyMap  map[string]*Policy // Index for O(1) policy lookup by name
+	cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 
 // NewEngine creates a new policy engine
 func NewEngine() *Engine {
 	return &Engine{
-		policies: make([]Policy, 0),
+		policies:  make([]Policy, 0),
+		policyMap: make(map[string]*Policy),
+		cidrCache: make(map[string]*net.IPNet),
 	}
 }
 
@@ -43,6 +47,8 @@ func (e *Engine) LoadFromFile(filename string) error {
 	}
 
 	e.policies = append(e.policies, policy)
+	// Update index for fast lookup
+	e.policyMap[policy.Metadata.Name] = &e.policies[len(e.policies)-1]
 	return nil
 }
 
@@ -100,7 +106,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 
 	// Validate CDE labeling (PCI Requirement 1.2)
 	if isCDEPolicy(policy) {
-		if !hasProperCDELabel(policy) {
+		if !isCDEPolicy(policy) {
 			result.Errors = append(result.Errors, "CDE policy must have 'pci-env: cde' label in podSelector")
 			result.Valid = false
 		}
@@ -130,26 +136,13 @@ func (e *Engine) GetPolicies() []Policy {
 	return e.policies
 }
 
-// GetPolicyByName returns a policy by name
+// GetPolicyByName returns a policy by name using O(1) map lookup
 func (e *Engine) GetPolicyByName(name string) *Policy {
-	for _, p := range e.policies {
-		if p.Metadata.Name == name {
-			return &p
-		}
-	}
-	return nil
+	return e.policyMap[name]
 }
 
 // isCDEPolicy checks if policy targets CDE environment
 func isCDEPolicy(policy *Policy) bool {
-	if env, ok := policy.Spec.PodSelector.MatchLabels["pci-env"]; ok {
-		return env == "cde"
-	}
-	return false
-}
-
-// hasProperCDELabel checks for proper CDE labeling
-func hasProperCDELabel(policy *Policy) bool {
 	if env, ok := policy.Spec.PodSelector.MatchLabels["pci-env"]; ok {
 		return env == "cde"
 	}
@@ -274,7 +267,24 @@ func matchesRule(rule *Rule, ip string, port int, protocol string) bool {
 	return false
 }
 
-// ipInCIDR checks if IP is in CIDR range
+// parseCIDR parses a CIDR with caching for performance
+func (e *Engine) parseCIDR(cidr string) (*net.IPNet, error) {
+	// Check cache first
+	if ipNet, ok := e.cidrCache[cidr]; ok {
+		return ipNet, nil
+	}
+
+	// Parse and cache
+	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+
+	e.cidrCache[cidr] = ipNet
+	return ipNet, nil
+}
+
+// ipInCIDR checks if IP is in CIDR range with caching
 func ipInCIDR(ipStr, cidr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
@@ -282,6 +292,21 @@ func ipInCIDR(ipStr, cidr string) bool {
 	}
 
 	_, ipNet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return false
+	}
+
+	return ipNet.Contains(ip)
+}
+
+// ipInCIDRCached checks if IP is in CIDR range using engine's cache
+func (e *Engine) ipInCIDRCached(ipStr, cidr string) bool {
+	ip := net.ParseIP(ipStr)
+	if ip == nil {
+		return false
+	}
+
+	ipNet, err := e.parseCIDR(cidr)
 	if err != nil {
 		return false
 	}

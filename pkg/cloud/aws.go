@@ -277,43 +277,21 @@ func (a *AWSIntegrator) addSecurityGroupRules(sgID string, pol *policy.Policy) e
 
 // buildIngressPermissions converts policy ingress rules to AWS permissions
 func (a *AWSIntegrator) buildIngressPermissions(rules []policy.Rule) []types.IpPermission {
-	perms := make([]types.IpPermission, 0)
-
-	for _, rule := range rules {
-		for _, port := range rule.Ports {
-			// Validate port range to prevent integer overflow
-			if port.Port < 0 || port.Port > 65535 {
-				continue // Skip invalid ports
-			}
-
-			perm := types.IpPermission{
-				IpProtocol: aws.String(strings.ToLower(port.Protocol)),
-				FromPort:   aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
-				ToPort:     aws.Int32(int32(port.Port)), // #nosec G115 - validated range 0-65535
-			}
-
-			// Add CIDR blocks from rule
-			for _, peer := range rule.From {
-				if peer.IPBlock != nil {
-					perm.IpRanges = append(perm.IpRanges, types.IpRange{
-						CidrIp:      aws.String(peer.IPBlock.CIDR),
-						Description: aws.String("PCI-DSS Policy Ingress"),
-					})
-				}
-			}
-
-			if len(perm.IpRanges) > 0 {
-				perms = append(perms, perm)
-			}
-		}
-	}
-
-	return perms
+	return a.buildPermissions(rules, true)
 }
 
 // buildEgressPermissions converts policy egress rules to AWS permissions
 func (a *AWSIntegrator) buildEgressPermissions(rules []policy.Rule) []types.IpPermission {
+	return a.buildPermissions(rules, false)
+}
+
+// buildPermissions converts policy rules to AWS permissions (DRY helper)
+func (a *AWSIntegrator) buildPermissions(rules []policy.Rule, isIngress bool) []types.IpPermission {
 	perms := make([]types.IpPermission, 0)
+	description := "PCI-DSS Policy Egress"
+	if isIngress {
+		description = "PCI-DSS Policy Ingress"
+	}
 
 	for _, rule := range rules {
 		for _, port := range rule.Ports {
@@ -329,11 +307,15 @@ func (a *AWSIntegrator) buildEgressPermissions(rules []policy.Rule) []types.IpPe
 			}
 
 			// Add CIDR blocks from rule
-			for _, peer := range rule.To {
+			peers := rule.To
+			if isIngress {
+				peers = rule.From
+			}
+			for _, peer := range peers {
 				if peer.IPBlock != nil {
 					perm.IpRanges = append(perm.IpRanges, types.IpRange{
 						CidrIp:      aws.String(peer.IPBlock.CIDR),
-						Description: aws.String("PCI-DSS Policy Egress"),
+						Description: aws.String(description),
 					})
 				}
 			}

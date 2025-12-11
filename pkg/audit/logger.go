@@ -33,6 +33,9 @@ type FileLogger struct {
 
 	// Closed flag
 	closed bool
+
+	// Background task management
+	bgTasks sync.WaitGroup
 }
 
 // NewLogger creates a new persistent audit logger
@@ -197,6 +200,9 @@ func (l *FileLogger) Close() error {
 		return nil
 	}
 
+	// Wait for all background tasks to complete
+	l.bgTasks.Wait()
+
 	// Flush any pending writes
 	if l.writer != nil {
 		if err := l.writer.Flush(); err != nil {
@@ -351,7 +357,9 @@ func (l *FileLogger) performRotation() error {
 
 	// Compress rotated file if enabled
 	if l.config.EnableCompression {
+		l.bgTasks.Add(1)
 		go func() {
+			defer l.bgTasks.Done()
 			if err := compressFile(rotatedPath); err != nil {
 				fmt.Fprintf(os.Stderr, "WARNING: failed to compress rotated log: %v\n", err)
 			}
@@ -359,7 +367,9 @@ func (l *FileLogger) performRotation() error {
 	}
 
 	// Clean up old rotated files
+	l.bgTasks.Add(1)
 	go func() {
+		defer l.bgTasks.Done()
 		if err := l.cleanupOldLogs(); err != nil {
 			fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
 		}

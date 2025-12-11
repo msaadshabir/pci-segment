@@ -154,56 +154,10 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 	priority := int32(100)
 
 	// Add ingress rules
-	for i, rule := range pol.Spec.Ingress {
-		for j, port := range rule.Ports {
-			for k, peer := range rule.From {
-				if peer.IPBlock != nil {
-					ruleName := fmt.Sprintf("ingress-%d-%d-%d", i, j, k)
-					rules = append(rules, &armnetwork.SecurityRule{
-						Name: to.Ptr(ruleName),
-						Properties: &armnetwork.SecurityRulePropertiesFormat{
-							Priority:                 to.Ptr(priority),
-							Direction:                to.Ptr(armnetwork.SecurityRuleDirectionInbound),
-							Access:                   to.Ptr(armnetwork.SecurityRuleAccessAllow),
-							Protocol:                 a.convertProtocol(port.Protocol),
-							SourcePortRange:          to.Ptr("*"),
-							DestinationPortRange:     to.Ptr(fmt.Sprintf("%d", port.Port)),
-							SourceAddressPrefix:      to.Ptr(peer.IPBlock.CIDR),
-							DestinationAddressPrefix: to.Ptr("*"),
-							Description:              to.Ptr("PCI-DSS Policy Ingress"),
-						},
-					})
-					priority++
-				}
-			}
-		}
-	}
+	priority = a.buildDirectionalRules(&rules, pol.Spec.Ingress, priority, true, "ingress")
 
 	// Add egress rules
-	for i, rule := range pol.Spec.Egress {
-		for j, port := range rule.Ports {
-			for k, peer := range rule.To {
-				if peer.IPBlock != nil {
-					ruleName := fmt.Sprintf("egress-%d-%d-%d", i, j, k)
-					rules = append(rules, &armnetwork.SecurityRule{
-						Name: to.Ptr(ruleName),
-						Properties: &armnetwork.SecurityRulePropertiesFormat{
-							Priority:                 to.Ptr(priority),
-							Direction:                to.Ptr(armnetwork.SecurityRuleDirectionOutbound),
-							Access:                   to.Ptr(armnetwork.SecurityRuleAccessAllow),
-							Protocol:                 a.convertProtocol(port.Protocol),
-							SourcePortRange:          to.Ptr("*"),
-							DestinationPortRange:     to.Ptr(fmt.Sprintf("%d", port.Port)),
-							SourceAddressPrefix:      to.Ptr("*"),
-							DestinationAddressPrefix: to.Ptr(peer.IPBlock.CIDR),
-							Description:              to.Ptr("PCI-DSS Policy Egress"),
-						},
-					})
-					priority++
-				}
-			}
-		}
-	}
+	priority = a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
 
 	// Add default deny rule (lowest priority)
 	rules = append(rules, &armnetwork.SecurityRule{
@@ -222,6 +176,56 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 	})
 
 	return rules
+}
+
+// buildDirectionalRules builds ingress or egress rules for Azure NSG (DRY helper)
+func (a *AzureIntegrator) buildDirectionalRules(rules *[]*armnetwork.SecurityRule, policyRules []policy.Rule, priority int32, isIngress bool, prefix string) int32 {
+	direction := armnetwork.SecurityRuleDirectionOutbound
+	description := "PCI-DSS Policy Egress"
+	if isIngress {
+		direction = armnetwork.SecurityRuleDirectionInbound
+		description = "PCI-DSS Policy Ingress"
+	}
+
+	for i, rule := range policyRules {
+		peers := rule.To
+		if isIngress {
+			peers = rule.From
+		}
+
+		for j, port := range rule.Ports {
+			for k, peer := range peers {
+				if peer.IPBlock != nil {
+					ruleName := fmt.Sprintf("%s-%d-%d-%d", prefix, i, j, k)
+					
+					srcAddr := "*"
+					dstAddr := peer.IPBlock.CIDR
+					if isIngress {
+						srcAddr = peer.IPBlock.CIDR
+						dstAddr = "*"
+					}
+
+					*rules = append(*rules, &armnetwork.SecurityRule{
+						Name: to.Ptr(ruleName),
+						Properties: &armnetwork.SecurityRulePropertiesFormat{
+							Priority:                 to.Ptr(priority),
+							Direction:                to.Ptr(direction),
+							Access:                   to.Ptr(armnetwork.SecurityRuleAccessAllow),
+							Protocol:                 a.convertProtocol(port.Protocol),
+							SourcePortRange:          to.Ptr("*"),
+							DestinationPortRange:     to.Ptr(fmt.Sprintf("%d", port.Port)),
+							SourceAddressPrefix:      to.Ptr(srcAddr),
+							DestinationAddressPrefix: to.Ptr(dstAddr),
+							Description:              to.Ptr(description),
+						},
+					})
+					priority++
+				}
+			}
+		}
+	}
+
+	return priority
 }
 
 // convertProtocol converts policy protocol to Azure protocol
