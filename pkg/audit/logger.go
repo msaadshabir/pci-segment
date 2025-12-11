@@ -13,6 +13,11 @@ import (
 	"time"
 )
 
+const (
+	// minEventsForSizeCheck is the minimum number of events before checking file size for rotation
+	minEventsForSizeCheck = 1000
+)
+
 // FileLogger implements persistent audit logging with tamper detection
 type FileLogger struct {
 	config Config
@@ -310,7 +315,7 @@ func (l *FileLogger) checkRotation() error {
 
 	// Check size-based rotation (only if we're close to the limit)
 	// Skip stat check if we know we're not close yet
-	if l.stats.EventsLastRotate > 1000 { // Only check after significant writes
+	if l.stats.EventsLastRotate > minEventsForSizeCheck {
 		if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
 			needsRotation = true
 		}

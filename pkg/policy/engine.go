@@ -13,7 +13,7 @@ import (
 // Engine handles policy parsing and validation
 type Engine struct {
 	policies   []Policy
-	policyMap  map[string]*Policy // Index for O(1) policy lookup by name
+	policyMap  map[string]Policy // Index for O(1) policy lookup by name (stored by value for stability)
 	cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 
@@ -21,7 +21,7 @@ type Engine struct {
 func NewEngine() *Engine {
 	return &Engine{
 		policies:  make([]Policy, 0),
-		policyMap: make(map[string]*Policy),
+		policyMap: make(map[string]Policy),
 		cidrCache: make(map[string]*net.IPNet),
 	}
 }
@@ -47,9 +47,8 @@ func (e *Engine) LoadFromFile(filename string) error {
 	}
 
 	e.policies = append(e.policies, policy)
-	// Update index for fast lookup - get stable pointer after append
-	idx := len(e.policies) - 1
-	e.policyMap[policy.Metadata.Name] = &e.policies[idx]
+	// Update index for fast lookup - store by value for stability
+	e.policyMap[policy.Metadata.Name] = policy
 	return nil
 }
 
@@ -136,7 +135,10 @@ func (e *Engine) GetPolicies() []Policy {
 
 // GetPolicyByName returns a policy by name using O(1) map lookup
 func (e *Engine) GetPolicyByName(name string) *Policy {
-	return e.policyMap[name]
+	if policy, ok := e.policyMap[name]; ok {
+		return &policy
+	}
+	return nil
 }
 
 // isCDEPolicy checks if policy targets CDE environment
