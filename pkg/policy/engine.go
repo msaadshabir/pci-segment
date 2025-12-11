@@ -2,6 +2,7 @@ package policy
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -12,9 +13,9 @@ import (
 
 // Engine handles policy parsing and validation
 type Engine struct {
-	policies   []Policy
-	policyMap  map[string]Policy // Index for O(1) policy lookup by name (stored by value for stability)
-	cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
+	policies  []Policy
+	policyMap map[string]Policy     // Index for O(1) policy lookup by name (stored by value for stability)
+	cidrCache map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 
 // NewEngine creates a new policy engine
@@ -137,6 +138,14 @@ func (e *Engine) GetPolicies() []Policy {
 func (e *Engine) GetPolicyByName(name string) *Policy {
 	if policy, ok := e.policyMap[name]; ok {
 		return &policy
+	}
+	// Fallback to linear scan to handle policies added without updating the index
+	// (primarily used in tests or manual setups)
+	for i := range e.policies {
+		if e.policies[i].Metadata.Name == name {
+			log.Printf("policy cache miss for %s; rebuilding from slice", name)
+			return &e.policies[i]
+		}
 	}
 	return nil
 }

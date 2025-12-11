@@ -13,6 +13,8 @@ import (
 	"github.com/msaadshabir/pci-segment/pkg/policy"
 )
 
+const defaultDenyPriority int32 = 4096
+
 // AzureIntegrator implements CloudIntegrator for Azure
 type AzureIntegrator struct {
 	client *armnetwork.SecurityGroupsClient
@@ -112,18 +114,18 @@ func (a *AzureIntegrator) syncNetworkSecurityGroupsConcurrent(resourceGroups []s
 		wg.Add(1)
 		go func(rg string) {
 			defer wg.Done()
-			
+
 			// Create a temporary result for this goroutine
 			tempResult := &SyncResult{
 				Changes: make([]Change, 0),
 				Errors:  make([]string, 0),
 			}
-			
+
 			if err := a.syncNetworkSecurityGroup(rg, nsgName, pol, tempResult); err != nil {
 				errChan <- fmt.Errorf("resource group %s: %w", rg, err)
 				return
 			}
-			
+
 			// Merge results safely
 			resultMu.Lock()
 			result.Changes = append(result.Changes, tempResult.Changes...)
@@ -209,11 +211,17 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 	// Add egress rules
 	priority = a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
 
+	// Ensure default deny priority is after generated rules (or at least the minimum expected value)
+	defaultPriority := priority
+	if defaultPriority < defaultDenyPriority {
+		defaultPriority = defaultDenyPriority
+	}
+
 	// Add default deny rule (lowest priority)
 	rules = append(rules, &armnetwork.SecurityRule{
 		Name: to.Ptr("default-deny-all"),
 		Properties: &armnetwork.SecurityRulePropertiesFormat{
-			Priority:                 to.Ptr(int32(4096)),
+			Priority:                 to.Ptr(defaultPriority),
 			Direction:                to.Ptr(armnetwork.SecurityRuleDirectionInbound),
 			Access:                   to.Ptr(armnetwork.SecurityRuleAccessDeny),
 			Protocol:                 to.Ptr(armnetwork.SecurityRuleProtocolAsterisk),
@@ -247,7 +255,7 @@ func (a *AzureIntegrator) buildDirectionalRules(rules *[]*armnetwork.SecurityRul
 			for k, peer := range peers {
 				if peer.IPBlock != nil {
 					ruleName := fmt.Sprintf("%s-%d-%d-%d", prefix, i, j, k)
-					
+
 					srcAddr := "*"
 					dstAddr := peer.IPBlock.CIDR
 					if isIngress {

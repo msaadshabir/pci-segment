@@ -137,18 +137,18 @@ func (a *AWSIntegrator) syncSecurityGroupsConcurrent(vpcIDs []string, sgName, sg
 		wg.Add(1)
 		go func(vpc string) {
 			defer wg.Done()
-			
+
 			// Create a temporary result for this goroutine
 			tempResult := &SyncResult{
 				Changes: make([]Change, 0),
 				Errors:  make([]string, 0),
 			}
-			
+
 			if err := a.syncSecurityGroup(vpc, sgName, sgDescription, pol, tempResult); err != nil {
 				errChan <- fmt.Errorf("VPC %s: %w", vpc, err)
 				return
 			}
-			
+
 			// Merge results safely
 			resultMu.Lock()
 			result.Changes = append(result.Changes, tempResult.Changes...)
