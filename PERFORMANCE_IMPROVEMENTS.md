@@ -41,7 +41,7 @@ func ipInCIDR(ipStr, cidr string) bool {
 }
 ```
 
-**After:** Added CIDR caching to avoid repeated parsing.
+**After:** Added CIDR caching infrastructure for policy validation operations.
 ```go
 func (e *Engine) parseCIDR(cidr string) (*net.IPNet, error) {
     if ipNet, ok := e.cidrCache[cidr]; ok {
@@ -53,7 +53,9 @@ func (e *Engine) parseCIDR(cidr string) (*net.IPNet, error) {
 }
 ```
 
-**Impact:** Eliminates redundant parsing overhead, particularly beneficial for high-traffic policy matching scenarios.
+**Impact:** CIDR cache is available for validation operations like `hasSpecificIPs()`. Traffic matching via `ipInCIDR()` continues to use direct parsing as it's called from standalone functions. Net.ParseCIDR is already highly optimized in the Go standard library, so the impact is minimal for this use case.
+
+**Note:** Future optimization could refactor traffic matching to be Engine methods for cache utilization.
 
 #### Problem: Duplicate Function
 **Before:** `hasProperCDELabel()` duplicated the logic of `isCDEPolicy()`.

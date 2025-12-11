@@ -194,14 +194,21 @@ func (l *FileLogger) Rotate() error {
 // Close closes the logger and flushes pending writes
 func (l *FileLogger) Close() error {
 	l.mu.Lock()
-	defer l.mu.Unlock()
-
+	
 	if l.closed {
+		l.mu.Unlock()
 		return nil
 	}
+	
+	l.closed = true
+	l.mu.Unlock()
 
-	// Wait for all background tasks to complete
+	// Wait for all background tasks to complete (outside mutex to avoid deadlock)
 	l.bgTasks.Wait()
+
+	// Reacquire lock for cleanup operations
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	// Flush any pending writes
 	if l.writer != nil {
@@ -237,7 +244,6 @@ func (l *FileLogger) Close() error {
 		}
 	}
 
-	l.closed = true
 	return nil
 }
 
