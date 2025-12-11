@@ -302,9 +302,9 @@ func (l *FileLogger) closeLogFile() error {
 func (l *FileLogger) checkRotation() error {
 	now := time.Now()
 
-	interval := defaultRotateCheckInterval
-	if l.config.RotateCheckInterval > 0 {
-		interval = l.config.RotateCheckInterval
+	interval := l.config.RotateCheckInterval
+	if interval <= 0 {
+		interval = defaultRotateCheckInterval
 	}
 
 	// Don't check too frequently (short interval to satisfy test expectations)
@@ -315,9 +315,11 @@ func (l *FileLogger) checkRotation() error {
 	sizeLimit := int64(l.config.MaxFileSizeMB) * 1024 * 1024
 
 	// Refresh file size before making rotation decision
-	if stat, err := l.file.Stat(); err == nil {
-		l.stats.CurrentFileSize = stat.Size()
+	stat, err := l.file.Stat()
+	if err != nil {
+		return fmt.Errorf("failed to stat log file: %w", err)
 	}
+	l.stats.CurrentFileSize = stat.Size()
 
 	// Use tracked size first to avoid repeated stat calls
 	needsRotation := l.stats.CurrentFileSize >= sizeLimit
