@@ -25,12 +25,12 @@ func (e *Engine) GetPolicyByName(name string) *Policy {
 ```go
 type Engine struct {
     policies   []Policy
-    policyMap  map[string]*Policy // O(1) lookup by name
+    policyMap  map[string]Policy // O(1) lookup by name (stored by value for pointer stability)
     cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 ```
 
-**Impact:** Reduces policy lookup time from O(n) to O(1), especially beneficial when processing many policies.
+**Impact:** Reduces policy lookup time from O(n) to O(1), especially beneficial when processing many policies. Policies are stored by value in the map to ensure pointer stability across slice reallocations.
 
 #### Problem: Repeated CIDR Parsing
 **Before:** Every IP matching operation parsed the CIDR from scratch.

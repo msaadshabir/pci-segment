@@ -106,7 +106,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 
 	// Validate CDE labeling (PCI Requirement 1.2)
 	if isCDEPolicy(policy) {
-		// Policy is already validated as CDE by isCDEPolicy check
+		// isCDEPolicy already validates that pci-env label exists and equals 'cde'
 
 		// Check for overly permissive rules (PCI Requirement 1.3)
 		if hasWildcardAccess(policy) {

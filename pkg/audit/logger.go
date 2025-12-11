@@ -374,8 +374,8 @@ func (l *FileLogger) performRotation() error {
 		return fmt.Errorf("failed to rename log file: %w", err)
 	}
 
-	// Compress rotated file if enabled
-	if l.config.EnableCompression && !l.closed {
+	// Compress rotated file if enabled (note: called while holding mutex from LogBatch)
+	if l.config.EnableCompression {
 		l.bgTasks.Add(1)
 		go func() {
 			defer l.bgTasks.Done()
@@ -386,15 +386,13 @@ func (l *FileLogger) performRotation() error {
 	}
 
 	// Clean up old rotated files
-	if !l.closed {
-		l.bgTasks.Add(1)
-		go func() {
-			defer l.bgTasks.Done()
-			if err := l.cleanupOldLogs(); err != nil {
-				fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
-			}
-		}()
-	}
+	l.bgTasks.Add(1)
+	go func() {
+		defer l.bgTasks.Done()
+		if err := l.cleanupOldLogs(); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
+		}
+	}()
 
 	// Open new log file
 	if err := l.openLogFile(); err != nil {
