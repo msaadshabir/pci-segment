@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -111,10 +112,59 @@ func (a *AWSIntegrator) syncPolicy(pol *policy.Policy, result *SyncResult) error
 		}
 	}
 
+	// Process VPCs concurrently for better performance
+	if len(vpcIDs) > 1 {
+		return a.syncSecurityGroupsConcurrent(vpcIDs, sgName, sgDescription, pol, result)
+	}
+
+	// Single VPC - no need for concurrency overhead
 	for _, vpcID := range vpcIDs {
 		if err := a.syncSecurityGroup(vpcID, sgName, sgDescription, pol, result); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// syncSecurityGroupsConcurrent syncs to multiple VPCs concurrently
+func (a *AWSIntegrator) syncSecurityGroupsConcurrent(vpcIDs []string, sgName, sgDescription string, pol *policy.Policy, result *SyncResult) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(vpcIDs))
+	var resultMu sync.Mutex
+
+	for _, vpcID := range vpcIDs {
+		wg.Add(1)
+		go func(vpc string) {
+			defer wg.Done()
+			
+			// Create a temporary result for this goroutine
+			tempResult := &SyncResult{
+				Changes: make([]Change, 0),
+				Errors:  make([]string, 0),
+			}
+			
+			if err := a.syncSecurityGroup(vpc, sgName, sgDescription, pol, tempResult); err != nil {
+				errChan <- fmt.Errorf("VPC %s: %w", vpc, err)
+				return
+			}
+			
+			// Merge results safely
+			resultMu.Lock()
+			result.Changes = append(result.Changes, tempResult.Changes...)
+			result.Errors = append(result.Errors, tempResult.Errors...)
+			result.ResourcesAdded += tempResult.ResourcesAdded
+			result.ResourcesUpdated += tempResult.ResourcesUpdated
+			resultMu.Unlock()
+		}(vpcID)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Return first error if any
+	for err := range errChan {
+		return err
 	}
 
 	return nil

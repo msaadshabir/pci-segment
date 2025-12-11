@@ -294,21 +294,24 @@ func (l *FileLogger) closeLogFile() error {
 func (l *FileLogger) checkRotation() error {
 	now := time.Now()
 
-	// Don't check too frequently (every 5 seconds is enough)
-	if now.Sub(l.lastRotateCheck) < 5*time.Second {
+	// Don't check too frequently (every 30 seconds is enough for most use cases)
+	if now.Sub(l.lastRotateCheck) < 30*time.Second {
 		return nil
 	}
 	l.lastRotateCheck = now
 
 	needsRotation := false
 
-	// Check size-based rotation
-	if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
-		needsRotation = true
+	// Check size-based rotation (only if we're close to the limit)
+	// Skip stat check if we know we're not close yet
+	if l.stats.EventsLastRotate > 1000 { // Only check after significant writes
+		if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
+			needsRotation = true
+		}
 	}
 
-	// Check time-based rotation (daily)
-	if l.config.RotateDaily {
+	// Check time-based rotation (daily) - this is fast
+	if !needsRotation && l.config.RotateDaily {
 		lastRotateDate := l.stats.LastRotation.Truncate(24 * time.Hour)
 		currentDate := now.Truncate(24 * time.Hour)
 		if currentDate.After(lastRotateDate) {

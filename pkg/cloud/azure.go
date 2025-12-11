@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
@@ -86,10 +87,59 @@ func (a *AzureIntegrator) syncPolicy(pol *policy.Policy, result *SyncResult) err
 		return fmt.Errorf("at least one resource group must be specified")
 	}
 
+	// Process resource groups concurrently for better performance
+	if len(resourceGroups) > 1 {
+		return a.syncNetworkSecurityGroupsConcurrent(resourceGroups, nsgName, pol, result)
+	}
+
+	// Single resource group - no need for concurrency overhead
 	for _, rgName := range resourceGroups {
 		if err := a.syncNetworkSecurityGroup(rgName, nsgName, pol, result); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+// syncNetworkSecurityGroupsConcurrent syncs to multiple resource groups concurrently
+func (a *AzureIntegrator) syncNetworkSecurityGroupsConcurrent(resourceGroups []string, nsgName string, pol *policy.Policy, result *SyncResult) error {
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(resourceGroups))
+	var resultMu sync.Mutex
+
+	for _, rgName := range resourceGroups {
+		wg.Add(1)
+		go func(rg string) {
+			defer wg.Done()
+			
+			// Create a temporary result for this goroutine
+			tempResult := &SyncResult{
+				Changes: make([]Change, 0),
+				Errors:  make([]string, 0),
+			}
+			
+			if err := a.syncNetworkSecurityGroup(rg, nsgName, pol, tempResult); err != nil {
+				errChan <- fmt.Errorf("resource group %s: %w", rg, err)
+				return
+			}
+			
+			// Merge results safely
+			resultMu.Lock()
+			result.Changes = append(result.Changes, tempResult.Changes...)
+			result.Errors = append(result.Errors, tempResult.Errors...)
+			result.ResourcesAdded += tempResult.ResourcesAdded
+			result.ResourcesUpdated += tempResult.ResourcesUpdated
+			resultMu.Unlock()
+		}(rgName)
+	}
+
+	wg.Wait()
+	close(errChan)
+
+	// Return first error if any
+	for err := range errChan {
+		return err
 	}
 
 	return nil
