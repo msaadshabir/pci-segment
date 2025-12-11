@@ -69,7 +69,7 @@ type Config struct {
 	// BufferSize is the size of the write buffer in bytes (default: 4KB)
 	BufferSize int `yaml:"buffer_size" json:"buffer_size"`
 
-	// RotateCheckInterval controls how frequently rotation checks run
+	// RotateCheckInterval controls how frequently rotation checks run (defaults to 5s when unset)
 	RotateCheckInterval time.Duration `yaml:"rotate_check_interval" json:"rotate_check_interval"`
 }
 

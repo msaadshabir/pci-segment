@@ -211,8 +211,8 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 
 	// Ensure default deny priority is after generated rules (or at least the minimum expected value)
 	defaultPriority := priority
-	if defaultPriority < 4096 {
-		defaultPriority = 4096
+	if defaultPriority < int32(4096) {
+		defaultPriority = int32(4096)
 	}
 
 	// Add default deny rule (lowest priority)
