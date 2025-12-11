@@ -12,9 +12,9 @@ import (
 
 // Engine handles policy parsing and validation
 type Engine struct {
-	policies   []Policy
-	policyMap  map[string]Policy // Index for O(1) policy lookup by name (stored by value for stability)
-	cidrCache  map[string]*net.IPNet // Cache for parsed CIDR blocks
+	policies  []Policy
+	policyMap map[string]Policy     // Index for O(1) policy lookup by name (stored by value for stability)
+	cidrCache map[string]*net.IPNet // Cache for parsed CIDR blocks
 }
 
 // NewEngine creates a new policy engine
@@ -137,6 +137,13 @@ func (e *Engine) GetPolicies() []Policy {
 func (e *Engine) GetPolicyByName(name string) *Policy {
 	if policy, ok := e.policyMap[name]; ok {
 		return &policy
+	}
+	// Fallback to linear scan to handle policies added without updating the index
+	for i := range e.policies {
+		if e.policies[i].Metadata.Name == name {
+			e.policyMap[name] = e.policies[i]
+			return &e.policies[i]
+		}
 	}
 	return nil
 }

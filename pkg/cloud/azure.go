@@ -112,18 +112,18 @@ func (a *AzureIntegrator) syncNetworkSecurityGroupsConcurrent(resourceGroups []s
 		wg.Add(1)
 		go func(rg string) {
 			defer wg.Done()
-			
+
 			// Create a temporary result for this goroutine
 			tempResult := &SyncResult{
 				Changes: make([]Change, 0),
 				Errors:  make([]string, 0),
 			}
-			
+
 			if err := a.syncNetworkSecurityGroup(rg, nsgName, pol, tempResult); err != nil {
 				errChan <- fmt.Errorf("resource group %s: %w", rg, err)
 				return
 			}
-			
+
 			// Merge results safely
 			resultMu.Lock()
 			result.Changes = append(result.Changes, tempResult.Changes...)
@@ -207,7 +207,7 @@ func (a *AzureIntegrator) buildSecurityRules(pol *policy.Policy) []*armnetwork.S
 	priority = a.buildDirectionalRules(&rules, pol.Spec.Ingress, priority, true, "ingress")
 
 	// Add egress rules
-	priority = a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
+	a.buildDirectionalRules(&rules, pol.Spec.Egress, priority, false, "egress")
 
 	// Add default deny rule (lowest priority)
 	rules = append(rules, &armnetwork.SecurityRule{
@@ -247,7 +247,7 @@ func (a *AzureIntegrator) buildDirectionalRules(rules *[]*armnetwork.SecurityRul
 			for k, peer := range peers {
 				if peer.IPBlock != nil {
 					ruleName := fmt.Sprintf("%s-%d-%d-%d", prefix, i, j, k)
-					
+
 					srcAddr := "*"
 					dstAddr := peer.IPBlock.CIDR
 					if isIngress {

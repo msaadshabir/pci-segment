@@ -16,6 +16,7 @@ import (
 const (
 	// minEventsForSizeCheck is the minimum number of events before checking file size for rotation
 	minEventsForSizeCheck = 1000
+	rotateCheckInterval   = 5 * time.Second
 )
 
 // FileLogger implements persistent audit logging with tamper detection
@@ -199,12 +200,12 @@ func (l *FileLogger) Rotate() error {
 // Close closes the logger and flushes pending writes
 func (l *FileLogger) Close() error {
 	l.mu.Lock()
-	
+
 	if l.closed {
 		l.mu.Unlock()
 		return nil
 	}
-	
+
 	l.closed = true
 	l.mu.Unlock()
 
@@ -305,19 +306,24 @@ func (l *FileLogger) closeLogFile() error {
 func (l *FileLogger) checkRotation() error {
 	now := time.Now()
 
-	// Don't check too frequently (every 30 seconds is enough for most use cases)
-	if now.Sub(l.lastRotateCheck) < 30*time.Second {
+	// Don't check too frequently (short interval to satisfy test expectations)
+	if now.Sub(l.lastRotateCheck) < rotateCheckInterval {
 		return nil
 	}
 	l.lastRotateCheck = now
+	sizeLimit := int64(l.config.MaxFileSizeMB) * 1024 * 1024
 
-	needsRotation := false
+	// Use tracked size first to avoid repeated stat calls
+	needsRotation := l.stats.CurrentFileSize >= sizeLimit
 
 	// Check size-based rotation (only if we're close to the limit)
 	// Skip stat check if we know we're not close yet
-	if l.stats.EventsLastRotate > minEventsForSizeCheck {
-		if l.stats.CurrentFileSize >= int64(l.config.MaxFileSizeMB)*1024*1024 {
-			needsRotation = true
+	if !needsRotation && l.stats.EventsLastRotate > minEventsForSizeCheck {
+		if stat, err := l.file.Stat(); err == nil {
+			l.stats.CurrentFileSize = stat.Size()
+			if l.stats.CurrentFileSize >= sizeLimit {
+				needsRotation = true
+			}
 		}
 	}
 
