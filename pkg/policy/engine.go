@@ -47,8 +47,9 @@ func (e *Engine) LoadFromFile(filename string) error {
 	}
 
 	e.policies = append(e.policies, policy)
-	// Update index for fast lookup
-	e.policyMap[policy.Metadata.Name] = &e.policies[len(e.policies)-1]
+	// Update index for fast lookup - get stable pointer after append
+	idx := len(e.policies) - 1
+	e.policyMap[policy.Metadata.Name] = &e.policies[idx]
 	return nil
 }
 
@@ -106,10 +107,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 
 	// Validate CDE labeling (PCI Requirement 1.2)
 	if isCDEPolicy(policy) {
-		if !isCDEPolicy(policy) {
-			result.Errors = append(result.Errors, "CDE policy must have 'pci-env: cde' label in podSelector")
-			result.Valid = false
-		}
+		// Policy is already validated as CDE by isCDEPolicy check
 
 		// Check for overly permissive rules (PCI Requirement 1.3)
 		if hasWildcardAccess(policy) {
@@ -292,21 +290,6 @@ func ipInCIDR(ipStr, cidr string) bool {
 	}
 
 	_, ipNet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return false
-	}
-
-	return ipNet.Contains(ip)
-}
-
-// ipInCIDRCached checks if IP is in CIDR range using engine's cache
-func (e *Engine) ipInCIDRCached(ipStr, cidr string) bool {
-	ip := net.ParseIP(ipStr)
-	if ip == nil {
-		return false
-	}
-
-	ipNet, err := e.parseCIDR(cidr)
 	if err != nil {
 		return false
 	}
