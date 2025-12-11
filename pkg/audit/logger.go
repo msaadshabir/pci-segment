@@ -334,6 +334,11 @@ func (l *FileLogger) checkRotation() error {
 
 // performRotation performs the actual log rotation
 func (l *FileLogger) performRotation() error {
+	// Check if logger is closed (prevent race condition with Close())
+	if l.closed {
+		return fmt.Errorf("logger is closed")
+	}
+
 	// Flush and close current file
 	if err := l.writer.Flush(); err != nil {
 		return fmt.Errorf("failed to flush before rotation: %w", err)
@@ -365,7 +370,7 @@ func (l *FileLogger) performRotation() error {
 	}
 
 	// Compress rotated file if enabled
-	if l.config.EnableCompression {
+	if l.config.EnableCompression && !l.closed {
 		l.bgTasks.Add(1)
 		go func() {
 			defer l.bgTasks.Done()
@@ -376,13 +381,15 @@ func (l *FileLogger) performRotation() error {
 	}
 
 	// Clean up old rotated files
-	l.bgTasks.Add(1)
-	go func() {
-		defer l.bgTasks.Done()
-		if err := l.cleanupOldLogs(); err != nil {
-			fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
-		}
-	}()
+	if !l.closed {
+		l.bgTasks.Add(1)
+		go func() {
+			defer l.bgTasks.Done()
+			if err := l.cleanupOldLogs(); err != nil {
+				fmt.Fprintf(os.Stderr, "WARNING: failed to cleanup old logs: %v\n", err)
+			}
+		}()
+	}
 
 	// Open new log file
 	if err := l.openLogFile(); err != nil {

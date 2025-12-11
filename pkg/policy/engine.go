@@ -121,7 +121,7 @@ func (e *Engine) Validate(policy *Policy) ValidationResult {
 		}
 
 		// Check for specific payment processor IPs
-		if !hasSpecificIPs(policy) {
+		if !e.hasSpecificIPs(policy) {
 			result.Warnings = append(result.Warnings, "consider using specific IP ranges instead of broad CIDRs for better segmentation")
 		}
 	}
@@ -180,11 +180,11 @@ func isWildcardCIDR(cidr string) bool {
 }
 
 // hasSpecificIPs checks if policy uses specific IPs vs broad ranges
-func hasSpecificIPs(policy *Policy) bool {
+func (e *Engine) hasSpecificIPs(policy *Policy) bool {
 	for _, rule := range policy.Spec.Egress {
 		for _, peer := range rule.To {
 			if peer.IPBlock != nil {
-				_, ipNet, err := net.ParseCIDR(peer.IPBlock.CIDR)
+				ipNet, err := e.parseCIDR(peer.IPBlock.CIDR)
 				if err != nil {
 					continue
 				}
@@ -282,7 +282,7 @@ func (e *Engine) parseCIDR(cidr string) (*net.IPNet, error) {
 	return ipNet, nil
 }
 
-// ipInCIDR checks if IP is in CIDR range with caching
+// ipInCIDR checks if IP is in CIDR range
 func ipInCIDR(ipStr, cidr string) bool {
 	ip := net.ParseIP(ipStr)
 	if ip == nil {
