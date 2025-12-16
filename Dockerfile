@@ -23,7 +23,7 @@ RUN cd pkg/enforcer/bpf && make clean && make
 FROM alpine:latest
 
 # Install runtime dependencies
-RUN apk add --no-cache ca-certificates libbpf libseccomp
+RUN apk add --no-cache --no-scripts ca-certificates libbpf libseccomp
 
 WORKDIR /app
 
