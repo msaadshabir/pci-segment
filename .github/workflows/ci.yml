@@ -5,6 +5,13 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 0"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -24,6 +31,9 @@ jobs:
         with:
           go-version: ${{ matrix.go }}
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install dependencies
         run: go mod download
@@ -65,6 +75,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -92,6 +105,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -117,6 +133,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install eBPF dependencies
         run: |
@@ -158,6 +177,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -169,7 +191,7 @@ jobs:
 
       - name: Run tests with coverage
         run: |
-          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./pkg/...
+          go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -192,6 +214,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -202,7 +227,6 @@ jobs:
         run: |
           go install golang.org/x/vuln/cmd/govulncheck@latest
           $(go env GOPATH)/bin/govulncheck ./...
-        continue-on-error: true
 
   build-release:
     name: Build Release Binaries
@@ -219,6 +243,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -258,6 +285,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -284,12 +314,12 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          platforms: linux/amd64
+          platforms: linux/amd64,linux/arm64
 
   benchmark:
     name: Performance Benchmarks
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
 
     steps:
       - name: Checkout code
@@ -300,6 +330,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install system dependencies
         run: |
@@ -368,6 +401,9 @@ jobs:
         with:
           go-version: "1.23"
           check-latest: true
+          cache: true
+          cache-dependency-path: |
+            go.sum
 
       - name: Install go-licenses
         run: go install github.com/google/go-licenses@latest
@@ -375,7 +411,6 @@ jobs:
       - name: Check licenses
         run: |
           $(go env GOPATH)/bin/go-licenses check ./... --allowed_licenses=Apache-2.0,MIT,BSD-3-Clause,BSD-2-Clause,ISC
-        continue-on-error: true
 
       - name: Generate license report
         run: |
@@ -403,13 +438,12 @@ jobs:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".github/workflows/markdown-link-check-config.json"
-        continue-on-error: true
 
       - name: Validate YAML files
         run: |
           sudo apt-get update
           sudo apt-get install -y yamllint
-          yamllint -c .yamllint examples/policies/*.yaml || true
+          yamllint -c .yamllint examples/policies/*.yaml
 
       - name: Check for broken policy examples
         run: |
