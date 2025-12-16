@@ -2,7 +2,7 @@
 FROM golang:1.25-alpine AS builder
 
 # Install build dependencies (libseccomp-dev/pkgconf needed for CGO seccomp bindings)
-RUN apk add --no-cache git make clang llvm libbpf-dev libseccomp-dev linux-headers pkgconf
+RUN apk add --no-cache --no-scripts git make clang llvm libbpf-dev libseccomp-dev linux-headers pkgconf
 
 WORKDIR /build
 
