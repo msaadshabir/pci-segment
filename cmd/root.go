@@ -73,7 +73,9 @@ func applyConfig(cmd *cobra.Command, cfg *config.Config) {
 		metricsPath = *cfg.Enforce.MetricsPath
 	}
 	if cfg.Enforce.Interface != nil && os.Getenv("PCI_SEGMENT_INTERFACE") == "" {
-		os.Setenv("PCI_SEGMENT_INTERFACE", *cfg.Enforce.Interface)
+		if err := os.Setenv("PCI_SEGMENT_INTERFACE", *cfg.Enforce.Interface); err != nil {
+			log.Warn("failed to set environment variable", "key", "PCI_SEGMENT_INTERFACE", "error", err)
+		}
 	}
 
 	if cfg.Cloud.ConfigFile != nil && flagExists(cmd, "cloud-config") && !flagChanged(cmd, "cloud-config") {
@@ -84,25 +86,39 @@ func applyConfig(cmd *cobra.Command, cfg *config.Config) {
 	}
 
 	if cfg.Privilege.User != nil && *cfg.Privilege.User != "" && os.Getenv(privilege.EnvTargetUser) == "" {
-		os.Setenv(privilege.EnvTargetUser, *cfg.Privilege.User)
+		if err := os.Setenv(privilege.EnvTargetUser, *cfg.Privilege.User); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvTargetUser, "error", err)
+		}
 	}
 	if cfg.Privilege.Group != nil && *cfg.Privilege.Group != "" && os.Getenv(privilege.EnvTargetGroup) == "" {
-		os.Setenv(privilege.EnvTargetGroup, *cfg.Privilege.Group)
+		if err := os.Setenv(privilege.EnvTargetGroup, *cfg.Privilege.Group); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvTargetGroup, "error", err)
+		}
 	}
 	if cfg.Privilege.DisableSeccomp != nil && *cfg.Privilege.DisableSeccomp && os.Getenv(privilege.EnvDisableSeccomp) == "" {
-		os.Setenv(privilege.EnvDisableSeccomp, "1")
+		if err := os.Setenv(privilege.EnvDisableSeccomp, "1"); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvDisableSeccomp, "error", err)
+		}
 	}
 	if cfg.Privilege.SkipDrop != nil && *cfg.Privilege.SkipDrop && os.Getenv(privilege.EnvSkipDrop) == "" {
-		os.Setenv(privilege.EnvSkipDrop, "1")
+		if err := os.Setenv(privilege.EnvSkipDrop, "1"); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvSkipDrop, "error", err)
+		}
 	}
 	if cfg.Privilege.SELinuxProfile != nil && *cfg.Privilege.SELinuxProfile != "" && os.Getenv(privilege.EnvSELinuxProfile) == "" {
-		os.Setenv(privilege.EnvSELinuxProfile, *cfg.Privilege.SELinuxProfile)
+		if err := os.Setenv(privilege.EnvSELinuxProfile, *cfg.Privilege.SELinuxProfile); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvSELinuxProfile, "error", err)
+		}
 	}
 	if cfg.Privilege.AppArmorProfile != nil && *cfg.Privilege.AppArmorProfile != "" && os.Getenv(privilege.EnvAppArmorProfile) == "" {
-		os.Setenv(privilege.EnvAppArmorProfile, *cfg.Privilege.AppArmorProfile)
+		if err := os.Setenv(privilege.EnvAppArmorProfile, *cfg.Privilege.AppArmorProfile); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvAppArmorProfile, "error", err)
+		}
 	}
 	if cfg.Privilege.SkipMACVerify != nil && *cfg.Privilege.SkipMACVerify && os.Getenv(privilege.EnvSkipMACVerify) == "" {
-		os.Setenv(privilege.EnvSkipMACVerify, "1")
+		if err := os.Setenv(privilege.EnvSkipMACVerify, "1"); err != nil {
+			log.Warn("failed to set environment variable", "key", privilege.EnvSkipMACVerify, "error", err)
+		}
 	}
 }
 
