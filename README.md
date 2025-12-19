@@ -85,8 +85,18 @@ pci-segment validate -f examples/policies/cde-isolation.yaml
 **Sync to cloud (AWS/Azure):**
 
 ```bash
-pci-segment cloud-sync -f examples/policies/*.yaml -c cloud-config.yaml --dry-run
+pci-segment cloud-sync -f examples/policies/*.yaml --cloud-config cloud-config.yaml --dry-run
 ```
+
+### Global Configuration File
+
+You can provide defaults (log level, cloud config path, interface, privilege overrides) via a YAML config file:
+
+```bash
+pci-segment --config /etc/pci-segment/config.yaml cloud-sync -f examples/policies/*.yaml --dry-run
+```
+
+Precedence is: flags > environment variables > config file > defaults.
 
 **Generate compliance report:**
 
@@ -156,6 +166,7 @@ Commands:
   cloud-validate  Check cloud resources for compliance
 
 Global Flags:
+      --config         Path to global config file (YAML)
   -f, --file           Policy file(s) (supports globs)
   -v, --verbose        Verbose output (alias for --log-level=debug)
       --log-level      Log level: debug, info, warn, error (default: info)

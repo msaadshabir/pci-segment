@@ -18,7 +18,7 @@ var cloudSyncCmd = &cobra.Command{
 	Long: `Sync network policies to cloud providers (AWS Security Groups, Azure NSGs).
 Automatically creates or updates cloud security resources to match PCI-DSS policies.`,
 	Example: `  pci-segment cloud-sync -f policies/cde-isolation.yaml -c cloud-config.yaml
-  pci-segment cloud-sync -f policies/*.yaml -c cloud-config.yaml --dry-run`,
+	  pci-segment cloud-sync -f policies/*.yaml -c cloud-config.yaml --dry-run`,
 	RunE: runCloudSync,
 }
 
@@ -30,17 +30,18 @@ var (
 func init() {
 	rootCmd.AddCommand(cloudSyncCmd)
 	cloudSyncCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file(s) to sync (required)")
-	cloudSyncCmd.Flags().StringVarP(&cloudConfigFile, "config", "c", "", "cloud configuration file (required)")
+	cloudSyncCmd.Flags().StringVarP(&cloudConfigFile, "cloud-config", "c", "", "cloud configuration file")
 	cloudSyncCmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be synced without making changes")
 	if err := cloudSyncCmd.MarkFlagRequired("file"); err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
-	}
-	if err := cloudSyncCmd.MarkFlagRequired("config"); err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
 	}
 }
 
 func runCloudSync(_ *cobra.Command, _ []string) error {
+	if cloudConfigFile == "" {
+		return fmt.Errorf("cloud configuration file is required (use --cloud-config)")
+	}
+
 	log.Debug("loading cloud configuration", "file", cloudConfigFile)
 
 	cloudCfg, err := loadCloudConfig(cloudConfigFile)

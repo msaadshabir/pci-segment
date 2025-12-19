@@ -216,7 +216,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/pci-segment enforce -f /etc/pci-segment/policies/*.yaml
+ExecStart=/usr/local/bin/pci-segment --config /etc/pci-segment/config.yaml enforce -f /etc/pci-segment/policies/*.yaml
 Restart=always
 User=root
 Environment=PCI_SEGMENT_INTERFACE=eth0

@@ -41,6 +41,7 @@ Required IAM permissions:
 ```
 
 Authentication methods:
+
 1. AWS Profile (recommended for local development)
 2. Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
 3. IAM instance profile (recommended for EC2)
@@ -48,6 +49,7 @@ Authentication methods:
 ### Azure
 
 Required permissions:
+
 - `Microsoft.Network/networkSecurityGroups/read`
 - `Microsoft.Network/networkSecurityGroups/write`
 - `Microsoft.Network/networkSecurityGroups/delete`
@@ -100,7 +102,7 @@ tags:
 ```bash
 pci-segment cloud-sync \
   -f examples/policies/cde-isolation.yaml \
-  -c aws-config.yaml \
+  --cloud-config aws-config.yaml \
   --dry-run
 ```
 
@@ -109,7 +111,7 @@ pci-segment cloud-sync \
 ```bash
 pci-segment cloud-sync \
   -f examples/policies/cde-isolation.yaml \
-  -c aws-config.yaml
+  --cloud-config aws-config.yaml
 ```
 
 ### 4. Validate Compliance
@@ -117,21 +119,26 @@ pci-segment cloud-sync \
 ```bash
 pci-segment cloud-validate \
   -f examples/policies/cde-isolation.yaml \
-  -c aws-config.yaml
+  --cloud-config aws-config.yaml
 ```
 
 ## Usage Examples
 
 ```bash
 # Sync multiple policies
-pci-segment cloud-sync -f examples/policies/*.yaml -c aws-config.yaml
+pci-segment cloud-sync -f examples/policies/*.yaml --cloud-config aws-config.yaml
 
 # Validate with JSON output
-pci-segment cloud-validate -f policies/ -c azure-config.yaml --format=json > report.json
+pci-segment cloud-validate -f policies/ --cloud-config azure-config.yaml --format=json > report.json
 
 # Cross-cloud deployment
-pci-segment cloud-sync -f policies/ -c aws-config.yaml
-pci-segment cloud-sync -f policies/ -c azure-config.yaml
+pci-segment cloud-sync -f policies/ --cloud-config aws-config.yaml
+pci-segment cloud-sync -f policies/ --cloud-config azure-config.yaml
+
+# Using Global Config
+# If you set `cloud.config_file` in /etc/pci-segment/config.yaml, you can omit --cloud-config:
+pci-segment --config /etc/pci-segment/config.yaml cloud-sync -f examples/policies/*.yaml --dry-run
+pci-segment --config /etc/pci-segment/config.yaml cloud-validate -f examples/policies/*.yaml
 ```
 
 ## Policy to Cloud Mapping
@@ -166,6 +173,7 @@ spec:
 ```
 
 Creates an AWS Security Group with:
+
 - Name: `pci-segment-cde-isolation`
 - Tags: `pci-segment/managed: true`, `pci-segment/policy: cde-isolation`, `pci-dss: Req 1.2, Req 1.3`
 - Ingress: Allow TCP 9090 from 10.0.20.0/24
@@ -208,19 +216,19 @@ jobs:
           AWS_SECRET_ACCESS_KEY: \${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           ./pci-segment validate -f policies/*.yaml
-          ./pci-segment cloud-sync -f policies/ -c aws-config.yaml
-          ./pci-segment cloud-validate -f policies/ -c aws-config.yaml
+          ./pci-segment cloud-sync -f policies/ --cloud-config aws-config.yaml
+          ./pci-segment cloud-validate -f policies/ --cloud-config aws-config.yaml
 ```
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| No default VPC found | Specify VPC IDs in config: `aws.vpc_ids` |
+| Problem                     | Solution                                                                 |
+| --------------------------- | ------------------------------------------------------------------------ |
+| No default VPC found        | Specify VPC IDs in config: `aws.vpc_ids`                                 |
 | Azure authentication failed | Verify service principal credentials with `az login --service-principal` |
-| Policy validation failed | Validate locally first: `pci-segment validate -f policy.yaml` |
-| AWS permission errors | Test with: `aws ec2 describe-security-groups --profile your-profile` |
-| Azure permission errors | Test with: `az network nsg list --resource-group pci-cde-rg` |
+| Policy validation failed    | Validate locally first: `pci-segment validate -f policy.yaml`            |
+| AWS permission errors       | Test with: `aws ec2 describe-security-groups --profile your-profile`     |
+| Azure permission errors     | Test with: `az network nsg list --resource-group pci-cde-rg`             |
 
 ## Limitations
 

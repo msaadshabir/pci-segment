@@ -16,7 +16,7 @@ var cloudValidateCmd = &cobra.Command{
 	Long: `Check if existing cloud security groups/NSGs comply with PCI-DSS policies.
 Reports violations and provides remediation guidance.`,
 	Example: `  pci-segment cloud-validate -f policies/cde-isolation.yaml -c cloud-config.yaml
-  pci-segment cloud-validate -f policies/*.yaml -c cloud-config.yaml --format=json`,
+	  pci-segment cloud-validate -f policies/*.yaml -c cloud-config.yaml --format=json`,
 	RunE: runCloudValidate,
 }
 
@@ -27,17 +27,18 @@ var (
 func init() {
 	rootCmd.AddCommand(cloudValidateCmd)
 	cloudValidateCmd.Flags().StringVarP(&policyFile, "file", "f", "", "policy file(s) to validate against (required)")
-	cloudValidateCmd.Flags().StringVarP(&cloudConfigFile, "config", "c", "", "cloud configuration file (required)")
+	cloudValidateCmd.Flags().StringVarP(&cloudConfigFile, "cloud-config", "c", "", "cloud configuration file")
 	cloudValidateCmd.Flags().StringVar(&outputFormat, "format", "text", "output format (text, json)")
 	if err := cloudValidateCmd.MarkFlagRequired("file"); err != nil {
-		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
-	}
-	if err := cloudValidateCmd.MarkFlagRequired("config"); err != nil {
 		cobra.CheckErr(fmt.Errorf("failed to mark flag required: %w", err))
 	}
 }
 
 func runCloudValidate(_ *cobra.Command, _ []string) error {
+	if cloudConfigFile == "" {
+		return fmt.Errorf("cloud configuration file is required (use --cloud-config)")
+	}
+
 	log.Debug("loading cloud configuration", "file", cloudConfigFile)
 
 	cloudCfg, err := loadCloudConfig(cloudConfigFile)

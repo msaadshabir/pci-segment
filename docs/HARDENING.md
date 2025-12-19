@@ -36,7 +36,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/pci-segment enforce -f /etc/pci-segment/policies/*.yaml
+ExecStart=/usr/local/bin/pci-segment --config /etc/pci-segment/config.yaml enforce -f /etc/pci-segment/policies/*.yaml
 AmbientCapabilities=CAP_BPF CAP_NET_ADMIN
 CapabilityBoundingSet=CAP_BPF CAP_NET_ADMIN
 User=root
@@ -121,7 +121,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/pci-segment enforce -f /etc/pci-segment/policies/*.yaml
+ExecStart=/usr/local/bin/pci-segment --config /etc/pci-segment/config.yaml enforce -f /etc/pci-segment/policies/*.yaml
 Environment=PCI_SEGMENT_SELINUX_PROFILE=pci_segment_t
 SELinuxContext=system_u:system_r:pci_segment_t:s0
 AmbientCapabilities=CAP_BPF CAP_NET_ADMIN
