@@ -586,8 +586,10 @@ func ipToUint32(ip net.IP) uint32 {
 
 func ipToString(ip uint32) string {
 	// Convert from little-endian uint32 back to IP string
+	var ipBytes [4]byte
+	binary.LittleEndian.PutUint32(ipBytes[:], ip)
 	return fmt.Sprintf("%d.%d.%d.%d",
-		byte(ip), byte(ip>>8), byte(ip>>16), byte(ip>>24))
+		ipBytes[0], ipBytes[1], ipBytes[2], ipBytes[3])
 }
 
 func protoToString(proto uint8) string {
