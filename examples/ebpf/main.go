@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -31,7 +32,7 @@ func main() {
 	// Check if running as root
 	if os.Geteuid() != 0 {
 		fmt.Fprintf(os.Stderr, "Error: This program requires root privileges\n")
-		fmt.Fprintf(os.Stderr, "Please run with: sudo %s\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Please run with: sudo %s\n", filepath.Base(os.Args[0])) // #nosec G705 -- executable name is displayed for usability
 		os.Exit(1)
 	}
 

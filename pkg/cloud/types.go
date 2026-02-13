@@ -59,7 +59,7 @@ type AzureConfig struct {
 	SubscriptionID string   `yaml:"subscription_id" json:"subscription_id"`
 	TenantID       string   `yaml:"tenant_id,omitempty" json:"tenant_id,omitempty"`
 	ClientID       string   `yaml:"client_id,omitempty" json:"client_id,omitempty"`
-	ClientSecret   string   `yaml:"client_secret,omitempty" json:"client_secret,omitempty"`
+	ClientSecret   string   `yaml:"client_secret,omitempty" json:"client_secret,omitempty"` // #nosec G117 -- configuration field required for Azure client-secret auth
 	ResourceGroups []string `yaml:"resource_groups,omitempty" json:"resource_groups,omitempty"`
 }
 
